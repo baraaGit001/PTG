@@ -23,10 +23,12 @@ fail() { printf '\n\033[1;31mFAILED: %s\033[0m\n' "$*" >&2; exit 1; }
 [ -f "$COMPOSE_FILE" ] || fail "$REPO_DIR/$COMPOSE_FILE is missing - is the checkout up to date?"
 [ -f .env ] || fail "$REPO_DIR/.env is missing - update-server.bat normally uploads it from deploy/server.env"
 
-# shellcheck disable=SC1091
-set -a; . ./.env; set +a
-: "${POSTGRES_USER:=ptg}"
-: "${POSTGRES_DB:=ptg}"
+# Read individual values out of .env rather than sourcing it. The file is a
+# compose env_file, not a shell script: `VITE_BRAND_NAME=PTG Business` is a
+# perfectly valid line there, and `. ./.env` tries to run `Business`.
+env_value() { sed -n "s/^[[:space:]]*$1=//p" .env | tail -1 | tr -d '[:cntrl:]'; }
+POSTGRES_USER="$(env_value POSTGRES_USER)"; : "${POSTGRES_USER:=ptg}"
+POSTGRES_DB="$(env_value POSTGRES_DB)"; : "${POSTGRES_DB:=ptg}"
 
 compose() { podman-compose -f "$COMPOSE_FILE" "$@"; }
 
