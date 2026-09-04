@@ -16,6 +16,9 @@ FROM deps AS build
 COPY packages packages
 COPY apps/api apps/api
 RUN pnpm --filter @ptg/api db:generate --schema=apps/api/prisma/schema.prisma || pnpm --filter @ptg/api exec prisma generate
+# @ptg/types and @ptg/config resolve to their compiled dist/, so they have to be
+# built before the API that requires them at runtime.
+RUN pnpm --filter @ptg/types --filter @ptg/config build
 RUN pnpm --filter @ptg/api build
 
 FROM node:20-alpine AS runtime

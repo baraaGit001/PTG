@@ -5,6 +5,11 @@
     "rootDir": "src",
     "baseUrl": "./",
     "incremental": true,
+    // Keep the build cache inside outDir. nest-cli's `deleteOutDir` wipes dist/
+    // but not this file, and an incremental build that trusts a stale cache
+    // skips emitting into the directory that was just deleted - leaving
+    // `nest start` to spawn a dist/main.js that was never written.
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "strictPropertyInitialization": false
   },
   "include": ["src/**/*.ts"],
