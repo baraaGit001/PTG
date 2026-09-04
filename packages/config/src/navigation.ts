@@ -26,7 +26,7 @@ export interface NavSection {
   items: NavItem[];
 }
 
-/** The five primary destinations: mobile bottom nav and desktop sidebar top. */
+/** The five primary destinations: top of the sidebar on desktop and in the mobile drawer. */
 export const PRIMARY_NAV: NavItem[] = [
   { labelKey: 'nav.home', path: '/app', icon: 'Home', requiresAuth: true, matchPrefix: '/app' },
   { labelKey: 'nav.goods', path: '/shop', icon: 'Store', matchPrefix: '/shop' },

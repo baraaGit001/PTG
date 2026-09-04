@@ -13,7 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   LanguageSelector,
-  MobileBottomNav,
+  MobileNavTrigger,
+  MobileSidebar,
   Sidebar,
   TopHeader,
 } from '@ptg/ui';
@@ -36,6 +37,7 @@ export function RootLayout() {
   const logout = useLogout();
   const { data: settings } = usePublicSettings();
   const { data: counts } = useNotificationCounts(Boolean(user));
+  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
 
   const primaryItems = filterNavByPermissions(user ? PRIMARY_NAV : GUEST_PRIMARY_NAV, user?.permissions ?? [], Boolean(user));
   const meSections = user ? filterNavSections(ME_NAV, user.permissions, true) : [];
@@ -61,9 +63,27 @@ export function RootLayout() {
           brand={brand}
         />
       }
+      mobileSidebar={
+        <MobileSidebar
+          open={mobileNavOpen}
+          onOpenChange={setMobileNavOpen}
+          primaryItems={primaryItems}
+          sections={meSections}
+          currentPath={location.pathname}
+          linkComponent={RouterNavLink}
+          labels={labels}
+          brand={brand}
+          title={t('common.menu')}
+        />
+      }
       header={
         <TopHeader
-          left={<div className="lg:hidden">{brand}</div>}
+          left={
+            <div className="flex min-w-0 items-center gap-1 lg:hidden">
+              <MobileNavTrigger onClick={() => setMobileNavOpen(true)} label={t('common.menu')} />
+              {brand}
+            </div>
+          }
           right={
             <>
               <LanguageSelector
@@ -110,7 +130,6 @@ export function RootLayout() {
           }
         />
       }
-      bottomNav={<MobileBottomNav items={primaryItems} currentPath={location.pathname} linkComponent={RouterNavLink} labels={labels} />}
     >
       <div className="mx-auto max-w-6xl px-4 py-4 lg:px-6 lg:py-6">
         <Outlet />

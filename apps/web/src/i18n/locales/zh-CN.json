@@ -1,6 +1,7 @@
 {
   "common": {
     "appName": "PTG 商务",
+    "menu": "菜单",
     "loading": "加载中…",
     "retry": "重试",
     "save": "保存",

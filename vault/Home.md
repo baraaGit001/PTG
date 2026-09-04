@@ -23,6 +23,8 @@ happened session to session.
 
 ## Recent sessions
 
+- [[Sessions/2026-09-04-8]] — the phone bottom tab bar became an off-canvas
+  sidebar drawer, carrying the "Me" sections it never had room for
 - [[Sessions/2026-09-04-7]] — product images got a real viewer: a shared
   full-screen lightbox, gallery arrows/counter, and the endless "Product
   Details" stack collapsed behind a "show all" toggle

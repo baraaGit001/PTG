@@ -89,7 +89,6 @@ module.exports = {
       },
       spacing: {
         'safe-bottom': 'env(safe-area-inset-bottom)',
-        'bottom-nav': '3.5rem',
       },
       keyframes: {
         'accordion-down': {

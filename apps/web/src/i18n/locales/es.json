@@ -1,6 +1,7 @@
 {
   "common": {
     "appName": "PTG Business",
+    "menu": "Menú",
     "loading": "Cargando…",
     "retry": "Reintentar",
     "save": "Guardar",
