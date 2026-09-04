@@ -10,9 +10,9 @@ import type {
 import { hasAnyPermission } from '@ptg/types';
 import { CurrentUser, RequirePermissions } from '../../common/decorators/auth.decorators.js';
 import type { RequestUser } from '../../common/types/request-user.js';
-import type { PaginatedResult } from '../../common/dto/pagination.dto.js';
+import { PaginatedResult } from '../../common/dto/pagination.dto.js';
 import { MembersService } from './members.service.js';
-import type { MemberListQueryDto, SetRelationshipDto, TreeQueryDto } from './members.dto.js';
+import { MemberListQueryDto, SetRelationshipDto, TreeQueryDto } from './members.dto.js';
 
 class ReportQueryDto {
   @IsOptional()

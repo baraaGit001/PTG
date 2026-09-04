@@ -3,9 +3,9 @@ import { ApiTags } from '@nestjs/swagger';
 import type { AdminUserDto } from '@ptg/types';
 import { CurrentUser, RequirePermissions } from '../../common/decorators/auth.decorators.js';
 import type { RequestUser } from '../../common/types/request-user.js';
-import type { PaginatedResult } from '../../common/dto/pagination.dto.js';
+import { PaginatedResult } from '../../common/dto/pagination.dto.js';
 import { UsersService } from './users.service.js';
-import type { AdminUserQueryDto, CreateUserDto, UpdateUserDto } from './users.dto.js';
+import { AdminUserQueryDto, CreateUserDto, UpdateUserDto } from './users.dto.js';
 
 @ApiTags('admin/users')
 @Controller('admin/users')

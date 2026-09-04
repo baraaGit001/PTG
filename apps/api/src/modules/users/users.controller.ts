@@ -4,7 +4,7 @@ import type { AddressDto, AuthenticatedUser } from '@ptg/types';
 import { CurrentUser } from '../../common/decorators/auth.decorators.js';
 import type { RequestUser } from '../../common/types/request-user.js';
 import { UsersService } from './users.service.js';
-import type { AddressInputDto, UpdateProfileDto } from './users.dto.js';
+import { AddressInputDto, UpdateProfileDto } from './users.dto.js';
 
 @ApiTags('me')
 @Controller()

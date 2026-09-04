@@ -4,7 +4,7 @@ import { IsArray, IsBoolean, IsIn, IsOptional, IsString } from 'class-validator'
 import { CONTENT_STATUSES, type ArticleDetailDto, type ArticleSummaryDto, type ContentStatus } from '@ptg/types';
 import { CurrentUser, Public, RequirePermissions } from '../../common/decorators/auth.decorators.js';
 import type { RequestUser } from '../../common/types/request-user.js';
-import type { PaginatedResult } from '../../common/dto/pagination.dto.js';
+import { PaginatedResult } from '../../common/dto/pagination.dto.js';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto.js';
 import { ContentService } from './content.service.js';
 

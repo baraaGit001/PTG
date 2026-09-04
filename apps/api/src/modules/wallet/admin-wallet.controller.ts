@@ -8,7 +8,7 @@ import { PaginationQueryDto, paginationArgs, buildPaginationMeta, dateRangeFilte
 import { AdjustmentsService } from './adjustments.service.js';
 import { BonusService } from './bonus.service.js';
 import { WalletLedgerService } from './wallet-ledger.service.js';
-import type { WalletTransactionQueryDto } from './wallet.dto.js';
+import { WalletTransactionQueryDto } from './wallet.dto.js';
 import type {
   BonusRuleInputDto,
   CreateAdjustmentDto,

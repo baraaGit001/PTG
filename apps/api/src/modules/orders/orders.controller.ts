@@ -5,9 +5,9 @@ import type { CheckoutQuoteDto, OrderDetailDto, OrderSummaryDto } from '@ptg/typ
 import { CurrentUser } from '../../common/decorators/auth.decorators.js';
 import type { RequestUser } from '../../common/types/request-user.js';
 import type { AppConfig } from '../../config/configuration.js';
-import type { PaginatedResult } from '../../common/dto/pagination.dto.js';
+import { PaginatedResult } from '../../common/dto/pagination.dto.js';
 import { OrdersService } from './orders.service.js';
-import type { CancelOrderDto, CreateOrderDto, OrderListQueryDto } from './orders.dto.js';
+import { CancelOrderDto, CreateOrderDto, OrderListQueryDto } from './orders.dto.js';
 
 @ApiTags('checkout')
 @Controller('checkout')

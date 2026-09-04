@@ -9,7 +9,7 @@ import { paginationArgs, buildPaginationMeta, dateRangeFilter, type PaginatedRes
 import { WalletLedgerService } from './wallet-ledger.service.js';
 import { PointsService } from './points.service.js';
 import { BonusService } from './bonus.service.js';
-import type { WalletTransactionQueryDto, PointTransactionQueryDto, BonusRecordQueryDto } from './wallet.dto.js';
+import { WalletTransactionQueryDto, PointTransactionQueryDto, BonusRecordQueryDto } from './wallet.dto.js';
 import type { WalletTransactionDto, PointTransactionDto, BonusRecordDto } from '@ptg/types';
 import { ApiException } from '../../common/errors/api.exception.js';
 import { WALLET_TYPES, type WalletType } from '@ptg/types';

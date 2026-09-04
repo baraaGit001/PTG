@@ -10,7 +10,7 @@ import type { RequestUser } from '../../common/types/request-user.js';
 import type { AppConfig } from '../../config/configuration.js';
 import { AuthService} from './auth.service.js';
 import { type RequestMeta } from './auth.service.js';
-import type { ChangePasswordDto, ForgotPasswordDto, LoginDto, LogoutDto, ResetPasswordDto } from './auth.dto.js';
+import { ChangePasswordDto, ForgotPasswordDto, LoginDto, LogoutDto, ResetPasswordDto } from './auth.dto.js';
 
 const REFRESH_COOKIE = 'ptg_refresh_token';
 

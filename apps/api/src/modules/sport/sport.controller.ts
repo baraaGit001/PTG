@@ -3,10 +3,10 @@ import { ApiTags } from '@nestjs/swagger';
 import type { RankingResponse, SportMetricDto, SportScoreDto } from '@ptg/types';
 import { CurrentUser, Public, RequirePermissions } from '../../common/decorators/auth.decorators.js';
 import type { RequestUser } from '../../common/types/request-user.js';
-import type { PaginationQueryDto } from '../../common/dto/pagination.dto.js';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto.js';
 import { paginationArgs, buildPaginationMeta, type PaginatedResult } from '../../common/dto/pagination.dto.js';
 import { SportService } from './sport.service.js';
-import type { RankingQueryDto, SportMetricInputDto, SubmitScoreDto } from './sport.dto.js';
+import { RankingQueryDto, SportMetricInputDto, SubmitScoreDto } from './sport.dto.js';
 
 @ApiTags('sport')
 @Controller('sport')

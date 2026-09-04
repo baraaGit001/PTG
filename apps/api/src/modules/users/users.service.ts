@@ -16,7 +16,7 @@ import {
 } from '../../common/dto/pagination.dto.js';
 import { toAuthenticatedUser } from './user.mapper.js';
 import type { AdminUserDto } from '@ptg/types';
-import type { CreateUserDto, UpdateUserDto } from './users.dto.js';
+import { CreateUserDto, UpdateUserDto } from './users.dto.js';
 
 /** `AddressInput` with the two genuinely-optional fields relaxed to accept `undefined` from a class-validator DTO, not just `null`. */
 type LooseAddressInput = Omit<AddressInput, 'district' | 'postalCode' | 'isDefault'> & {

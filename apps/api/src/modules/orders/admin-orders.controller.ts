@@ -3,9 +3,9 @@ import { ApiTags } from '@nestjs/swagger';
 import type { OrderDetailDto, OrderSummaryDto, ShipmentDto } from '@ptg/types';
 import { CurrentUser, RequirePermissions } from '../../common/decorators/auth.decorators.js';
 import type { RequestUser } from '../../common/types/request-user.js';
-import type { PaginatedResult } from '../../common/dto/pagination.dto.js';
+import { PaginatedResult } from '../../common/dto/pagination.dto.js';
 import { OrdersService } from './orders.service.js';
-import type { OrderListQueryDto, RefundOrderDto, UpdateOrderStatusDto, UpdateShipmentDto } from './orders.dto.js';
+import { OrderListQueryDto, RefundOrderDto, UpdateOrderStatusDto, UpdateShipmentDto } from './orders.dto.js';
 
 @ApiTags('admin/orders')
 @Controller('admin/orders')

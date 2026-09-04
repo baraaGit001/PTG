@@ -3,9 +3,9 @@ import { ApiTags } from '@nestjs/swagger';
 import type { CategoryDto, InventoryDto, ProductDetailDto, ProductSummaryDto } from '@ptg/types';
 import { CurrentUser, Public, RequirePermissions } from '../../common/decorators/auth.decorators.js';
 import type { RequestUser } from '../../common/types/request-user.js';
-import type { PaginatedResult } from '../../common/dto/pagination.dto.js';
+import { PaginatedResult } from '../../common/dto/pagination.dto.js';
 import { CatalogService } from './catalog.service.js';
-import type { CategoryInputDto, InventoryAdjustmentDto, ProductInputDto, ProductListQueryDto } from './catalog.dto.js';
+import { CategoryInputDto, InventoryAdjustmentDto, ProductInputDto, ProductListQueryDto } from './catalog.dto.js';
 import { InventoryService } from './inventory.service.js';
 
 @ApiTags('categories')

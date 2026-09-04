@@ -3,7 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import type { CommunityCommentDto, CommunityPostDto, CommunityReportDto } from '@ptg/types';
 import { CurrentUser, Public, RequirePermissions } from '../../common/decorators/auth.decorators.js';
 import type { RequestUser } from '../../common/types/request-user.js';
-import type { PaginatedResult } from '../../common/dto/pagination.dto.js';
+import { PaginatedResult } from '../../common/dto/pagination.dto.js';
 import { CommunityService } from './community.service.js';
 import type {
   CreateCommentDto,

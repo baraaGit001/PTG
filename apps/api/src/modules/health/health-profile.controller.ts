@@ -4,7 +4,7 @@ import type { HealthProfileDto } from '@ptg/types';
 import { CurrentUser } from '../../common/decorators/auth.decorators.js';
 import type { RequestUser } from '../../common/types/request-user.js';
 import { HealthProfileService } from './health-profile.service.js';
-import type { UpdateHealthProfileDto } from './health-profile.dto.js';
+import { UpdateHealthProfileDto } from './health-profile.dto.js';
 
 @ApiTags('health')
 @Controller('health/profile')
