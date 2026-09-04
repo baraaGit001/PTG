@@ -31,3 +31,5 @@ Proposed | Accepted | Superseded by [[NNNN-...]]
 
 - [[0001-ledger-as-source-of-truth]]
 - [[0002-bonus-calculation-not-automated]]
+- [[0003-internal-packages-ship-compiled-output]]
+- [[0004-no-type-only-imports-for-injectables]]
