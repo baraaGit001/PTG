@@ -32,6 +32,34 @@ POSTGRES_DB="$(env_value POSTGRES_DB)"; : "${POSTGRES_DB:=ptg}"
 
 compose() { podman-compose -f "$COMPOSE_FILE" "$@"; }
 
+# Rootless podman runs one aardvark-dns for all of the user's networks, driven
+# by the files in its runtime directory. Each file names the gateway aardvark
+# must bind. If a network was recreated on a different subnet, the old file
+# survives, aardvark cannot bind the address that no longer exists, and it
+# exits - taking DNS down for *every* network, not just that one. Containers
+# then cannot resolve each other or the internet, which shows up as
+# `getaddrinfo EAI_AGAIN` somewhere far from the cause.
+#
+# An entry for a network with no running containers is garbage by definition;
+# podman rewrites it on the next start.
+prune_stale_dns_entries() {
+  local dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/containers/networks/aardvark-dns"
+  [ -d "$dir" ] || return 0
+  local f net
+  for f in "$dir"/*; do
+    [ -f "$f" ] || continue
+    net="$(basename "$f")"
+    [ "$net" = aardvark.pid ] && continue
+    if [ -z "$(podman ps -q --filter network="$net" 2>/dev/null)" ]; then
+      echo "dropping stale DNS entry for '$net' (no running containers)"
+      rm -f "$f"
+    fi
+  done
+}
+
+step "checking the container DNS resolver"
+prune_stale_dns_entries
+
 step "building images (api, web, admin) - first run pulls base images and can take ~15 min"
 compose build
 
