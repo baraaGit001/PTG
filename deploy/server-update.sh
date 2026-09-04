@@ -108,7 +108,12 @@ else
 fi
 
 step "starting api / web / admin / proxy"
-compose up -d
+# --force-recreate because podman-compose, unlike docker compose, leaves a
+# running container alone when the image it was created from has been rebuilt.
+# Without it `compose build` above produces new images that nothing ever runs,
+# and a deploy silently ships the previous build. Only the stateless services
+# are named, so postgres/redis/minio keep their uptime.
+compose up -d --force-recreate api web admin proxy
 
 step "waiting for the API to report healthy"
 API_OK=no
