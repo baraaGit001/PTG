@@ -17,7 +17,7 @@ function lazyPage(loader: () => Promise<{ default: React.ComponentType }>, permi
 
 const LoginPage = React.lazy(() => import('@/features/auth/login-page'));
 
-export const router = createBrowserRouter([
+const routes = [
   {
     path: '/login',
     element: (
@@ -49,4 +49,11 @@ export const router = createBrowserRouter([
       { path: '/settings', element: lazyPage(() => import('@/features/settings/settings-page'), ['settings.read']) },
     ],
   },
-]);
+];
+
+// Vite's BASE_URL is '/' in dev and '/admin/' in the server build, so the
+// router's basename follows whatever the bundle was built for instead of
+// being hardcoded in two places that can drift apart.
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+export const router = createBrowserRouter(routes, basename ? { basename } : undefined);

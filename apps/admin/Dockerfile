@@ -15,9 +15,19 @@ RUN pnpm install --frozen-lockfile --filter @ptg/admin...
 
 FROM deps AS build
 COPY packages packages
+# See apps/api/Dockerfile: the package builds reach back into scripts/.
+COPY scripts scripts
 COPY apps/admin apps/admin
 ARG VITE_API_URL=/api/v1
 ENV VITE_API_URL=$VITE_API_URL
+# Where the console will be mounted. '/' for a dedicated origin, '/admin/' when
+# it shares one with the web app - see apps/admin/vite.config.ts.
+ARG ADMIN_BASE_PATH=/
+ENV ADMIN_BASE_PATH=$ADMIN_BASE_PATH
+# @ptg/types and @ptg/config resolve to their compiled dist/ (ADR 0003), so
+# `tsc -b` here cannot see them until they are built - without this the app
+# build fails with "Cannot find module '@ptg/types'" on every import of it.
+RUN pnpm --filter @ptg/types --filter @ptg/config build
 RUN pnpm --filter @ptg/admin build
 
 FROM nginx:1.27-alpine AS runtime

@@ -3,6 +3,11 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
 export default defineConfig({
+  // The server deployment serves the admin console under /admin/ on the same
+  // origin as the web app (only two ports are open through the OCI security
+  // list - see docs/DEPLOYMENT.md). Left at '/' everywhere else so `pnpm dev`
+  // still answers on http://localhost:5174/ rather than /admin/.
+  base: process.env.ADMIN_BASE_PATH ?? '/',
   plugins: [react()],
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },

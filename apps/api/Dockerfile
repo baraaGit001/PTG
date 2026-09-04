@@ -18,6 +18,10 @@ RUN pnpm install --frozen-lockfile --filter @ptg/api...
 
 FROM deps AS build
 COPY packages packages
+# @ptg/types and @ptg/config end their build with
+# `node ../../scripts/write-esm-marker.mjs`, so the repo-root scripts/ has to
+# be in the context too or that step dies with "Cannot find module".
+COPY scripts scripts
 COPY apps/api apps/api
 RUN pnpm --filter @ptg/api db:generate --schema=apps/api/prisma/schema.prisma || pnpm --filter @ptg/api exec prisma generate
 # @ptg/types and @ptg/config resolve to their compiled dist/, so they have to be

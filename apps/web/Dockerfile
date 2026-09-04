@@ -15,9 +15,15 @@ RUN pnpm install --frozen-lockfile --filter @ptg/web...
 
 FROM deps AS build
 COPY packages packages
+# See apps/api/Dockerfile: the package builds reach back into scripts/.
+COPY scripts scripts
 COPY apps/web apps/web
 ARG VITE_API_URL=/api/v1
 ENV VITE_API_URL=$VITE_API_URL
+# @ptg/types and @ptg/config resolve to their compiled dist/ (ADR 0003), so
+# `tsc -b` here cannot see them until they are built - without this the app
+# build fails with "Cannot find module '@ptg/types'" on every import of it.
+RUN pnpm --filter @ptg/types --filter @ptg/config build
 RUN pnpm --filter @ptg/web build
 
 FROM nginx:1.27-alpine AS runtime

@@ -11,8 +11,8 @@
 #   - postgres/redis/minio publish no host ports. Only the proxy is reachable.
 #   - the API publishes no host port either: 3001 belongs to another project on
 #     this machine, and the proxy reaches the API over the compose network.
-#   - the proxy listens on 80 + 3000 (web) and 4000 (admin) - see
-#     infra/nginx/server-proxy.conf for why admin gets its own port.
+#   - the proxy listens on 80 + 3000 and serves web, admin (/admin/) and the
+#     API from that one origin - see infra/nginx/server-proxy.conf.
 #   - images are fully qualified, because podman has no implicit docker.io.
 #
 #   podman-compose -f docker-compose.server.yml up -d --build
@@ -117,6 +117,7 @@ services:
       dockerfile: apps/admin/Dockerfile
       args:
         VITE_API_URL: /api/v1
+        ADMIN_BASE_PATH: /admin/
     image: localhost/ptg_admin:latest
     container_name: ptg-admin
     restart: unless-stopped
@@ -130,9 +131,11 @@ services:
     volumes:
       - ./infra/nginx/server-proxy.conf:/etc/nginx/conf.d/default.conf:ro,Z
     ports:
+      # :3000 is the whole public surface. :80 is bound too so the site works
+      # the moment someone adds an 80 ingress rule in the OCI console - today
+      # the VCN drops it. :4000 belongs to AradoBot on this box.
       - '80:80'
       - '3000:3000'
-      - '4000:4000'
     depends_on:
       - api
       - web

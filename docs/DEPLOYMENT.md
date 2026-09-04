@@ -53,21 +53,35 @@ the stack. The environment is uploaded *every* run, so `deploy/server.env` is
 the single place to change production configuration - it is gitignored;
 `deploy/server.env.example` is the committed template.
 
-### Ports
+### Ports, and why there are only two
+
+The OCI VCN security list on this box allows **3000 and 4000** inbound and
+drops everything else — port 80 times out rather than being refused, which is
+the signature of the packet never reaching the host. Opening a port in
+`firewalld` is only half of it; the other half is a console-side ingress rule
+nobody has added. Two apps share the box, so they get one port each and
+multiplex behind nginx:
 
 | URL | Serves |
 | --- | --- |
-| `http://<ip>/` and `http://<ip>:3000/` | web app |
-| `http://<ip>:4000/` | admin console |
-| `http://<ip>/api/v1`, `/health`, `/docs` | API (from every port above) |
+| `http://<ip>:3000/` | PTG web app |
+| `http://<ip>:3000/admin/` | PTG admin console |
+| `http://<ip>:3000/api/v1`, `/health`, `/docs`, `/media/` | PTG API |
+| `http://<ip>:4000/` | AradoBot web app |
+| `http://<ip>:4000/api/`, `/health` | AradoBot API |
 
-The admin console gets its own port rather than the `/admin/` prefix that
-`docker-compose.prod.yml` uses. `apps/admin/vite.config.ts` sets no
-`base: '/admin/'`, so the built `index.html` requests `/assets/*.js` from the
-site root - which a path-prefixed mount hands to the *web* app. A separate
-origin keeps both SPAs correct without a base-path change that would also have
-to be threaded through the router. Port 3000 is kept alongside 80 because it
-is the port already proven open end-to-end through the OCI security list.
+The proxy also binds `:80`, so PTG moves to the bare IP the moment an 80
+ingress rule is added — nothing else needs to change.
+
+### The admin console's base path
+
+Sharing one origin means the admin console lives under `/admin/`, and a
+default Vite build cannot: its `index.html` asks for `/assets/*.js` at the
+site *root*, which the proxy hands to the web app. So `apps/admin` takes an
+`ADMIN_BASE_PATH` build arg (`/admin/` on the server, `/` everywhere else, so
+`pnpm dev` still answers on `http://localhost:5174/`), and the router's
+basename follows `import.meta.env.BASE_URL` rather than being hardcoded
+somewhere it can drift from the build.
 
 ### Why a separate compose file
 
