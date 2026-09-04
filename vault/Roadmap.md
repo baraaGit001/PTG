@@ -20,10 +20,23 @@
 - [ ] Outbound email not wired to a provider (reset tokens generated, not sent)
 - [ ] E2E: only a starter Playwright smoke spec exists
 
+## Deployed
+
+The site runs on one Oracle Cloud VM at `http://130.110.124.121` (web),
+`:4000` (admin). `update-server.bat` redeploys it from `origin/main` — see
+[DEPLOYMENT.md](../docs/DEPLOYMENT.md) and
+[[Decisions/0008-single-vm-podman-deployment]].
+
 ## Next up
 
-*(empty — fill in as work is planned; move items here from a session note's
-"Open questions / follow-ups" once they're actually decided)*
+- [ ] Open port 80 (and 4000) in the **OCI VCN security list** — `firewalld`
+      allows them, but the console-side rule is unverified, which is why the
+      web app also answers on the known-good `:3000` — see [[Sessions/2026-09-04-6]]
+- [ ] A domain + TLS, then `COOKIE_SECURE=true` and a real `COOKIE_DOMAIN` in
+      `deploy/server.env` — both are deliberately off while the site is a bare
+      IP over http
+- [ ] Decide the fate of `pricelens` on the same box: stopped, not removed,
+      and it will not restart on its own
 
 ## How to use this file
 

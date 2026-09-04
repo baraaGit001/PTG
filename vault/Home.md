@@ -23,6 +23,9 @@ happened session to session.
 
 ## Recent sessions
 
+- [[Sessions/2026-09-04-6]] — the site went live on the Oracle Cloud box:
+  rootless podman on ARM, `pricelens` stopped to free its ports, and
+  `update-server.bat` as the one command that redeploys it
 - [[Sessions/2026-09-04-5]] — the Community 400 (ADR 0004's type-only
   import trap, twice) and the Health tab that never reached the Health
   screen; Health Management rebuilt to the app's layout
