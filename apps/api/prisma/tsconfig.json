@@ -1,0 +1,9 @@
+{
+  "extends": "@ptg/tsconfig/node.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": "..",
+    "incremental": false
+  },
+  "include": ["seed.ts", "../src/modules/members/path.util.ts"]
+}

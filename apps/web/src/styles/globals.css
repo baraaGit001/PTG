@@ -1,0 +1,6 @@
+@import '@ptg/ui/styles.css';
+
+/* RTL: flip the few properties Tailwind's logical-property utilities don't already handle for us. */
+html[dir='rtl'] .flip-rtl {
+  transform: scaleX(-1);
+}

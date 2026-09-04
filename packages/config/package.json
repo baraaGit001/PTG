@@ -1,0 +1,30 @@
+{
+  "name": "@ptg/config",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./tailwind-preset": {
+      "default": "./tailwind-preset.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@ptg/types": "workspace:*",
+    "tailwindcss": "3.4.10",
+    "tailwindcss-animate": "1.0.7"
+  },
+  "devDependencies": {
+    "@ptg/tsconfig": "workspace:*",
+    "typescript": "5.5.4"
+  }
+}

@@ -1,0 +1,1300 @@
+// ---------------------------------------------------------------------------
+// PTG Business - primary database schema.
+//
+// Conventions:
+//  - Primary keys are UUIDs (Prisma-generated, database-portable).
+//  - All monetary amounts are stored as BigInt minor units + a currency code
+//    column, never as Decimal/Float. See packages/types/src/money.ts.
+//  - Enums mirror packages/types/src/enums.ts one-for-one.
+//  - createdAt/updatedAt are present on every mutable entity.
+//  - Hard deletes are avoided wherever a row participates in financial or
+//    order history; status columns (ARCHIVED/CLOSED/CANCELLED/...) are used
+//    instead so ledgers and audit trails never lose their referents.
+// ---------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// Auth / RBAC
+// =============================================================================
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum RoleName {
+  SUPER_ADMIN
+  ADMIN
+  FINANCE_ADMIN
+  ORDER_ADMIN
+  PRODUCT_ADMIN
+  CONTENT_ADMIN
+  SUPPORT
+  PARTNER
+  CUSTOMER
+  GUEST
+}
+
+model User {
+  id                  String     @id @default(uuid())
+  memberId            String     @unique
+  email               String?    @unique
+  phone               String?    @unique
+  passwordHash        String
+  fullName            String
+  displayName         String
+  avatarUrl           String?
+  locale              String     @default("en")
+  status              UserStatus @default(ACTIVE)
+  failedLoginAttempts Int        @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  roles UserRole[]
+
+  partnerProfile        PartnerProfile?
+  healthProfile         HealthProfile?
+  sponsorRelationship   SponsorRelationship?    @relation("SponsorMember")
+  placementRelationship PlacementRelationship?  @relation("PlacementMember")
+  sponsoredMembers      SponsorRelationship[]   @relation("SponsorOf")
+  placedMembers         PlacementRelationship[] @relation("PlacementOf")
+
+  addresses            Address[]
+  wallets              Wallet[]
+  pointTransactions    PointTransaction[]
+  bonusRecords         BonusRecord[]
+  requestedAdjustments WalletAdjustmentRequest[] @relation("AdjustmentRequestedBy")
+  reviewedAdjustments  WalletAdjustmentRequest[] @relation("AdjustmentReviewedBy")
+
+  sessions      Session[]
+  carts         Cart[]
+  orders        Order[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  communityPosts     CommunityPost[]
+  communityComments  CommunityComment[]
+  communityReactions CommunityReaction[]
+  communityReports   CommunityReport[]   @relation("ReportedBy")
+
+  sportScores           SportScore[]
+  investmentEnrollments InvestmentEnrollment[]
+
+  @@index([status])
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        RoleName @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId    String
+  roleId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Session {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent     String?
+  ipAddress     String?
+  rememberMe    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  lastSeenAt    DateTime  @default(now())
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  revokedReason String?
+
+  refreshTokens RefreshToken[]
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model RefreshToken {
+  id                String    @id @default(uuid())
+  sessionId         String
+  session           Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  /// Argon2 hash of the token secret - the raw token is never persisted.
+  tokenHash         String    @unique
+  createdAt         DateTime  @default(now())
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  /// Set when this token was exchanged for a new one (rotation chain).
+  replacedByTokenId String?   @unique
+
+  @@index([sessionId])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  /// Argon2 hash of the token secret - the raw token is only ever sent by email/out-of-band.
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+// =============================================================================
+// Members / partners / network
+// =============================================================================
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+  TERMINATED
+}
+
+model PartnerProfile {
+  userId           String           @id
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  membershipStatus MembershipStatus @default(PENDING)
+  rank             String?
+  level            Int              @default(0)
+  joinedAt         DateTime?
+  businessName     String?
+  taxId            String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@map("partner_profiles")
+}
+
+/// Adjacency-list + materialized-path hierarchy. `path` is the dot-joined
+/// chain of ancestor member ids (e.g. ".rootId.parentId.") which lets subtree
+/// reads use a single indexed prefix scan instead of recursive N+1 queries.
+/// Completely independent of PlacementRelationship by design.
+model SponsorRelationship {
+  memberId  String   @id
+  member    User     @relation("SponsorMember", fields: [memberId], references: [id], onDelete: Cascade)
+  sponsorId String?
+  sponsor   User?    @relation("SponsorOf", fields: [sponsorId], references: [id], onDelete: SetNull)
+  path      String
+  depth     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sponsorId])
+  @@index([path])
+  @@map("sponsor_relationships")
+}
+
+model PlacementRelationship {
+  memberId          String   @id
+  member            User     @relation("PlacementMember", fields: [memberId], references: [id], onDelete: Cascade)
+  placementParentId String?
+  placementParent   User?    @relation("PlacementOf", fields: [placementParentId], references: [id], onDelete: SetNull)
+  path              String
+  depth             Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([placementParentId])
+  @@index([path])
+  @@map("placement_relationships")
+}
+
+model Address {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipientName String
+  phone         String
+  country       String
+  region        String
+  city          String
+  district      String?
+  street        String
+  postalCode    String?
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// =============================================================================
+// Wallet / ledger / points / bonus
+// =============================================================================
+
+enum WalletType {
+  E_ACCOUNT
+  BONUS_POOL
+  PERSONAL_POINTS
+}
+
+enum WalletStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+  REVERSAL
+  BONUS
+  REFUND
+  ADJUSTMENT
+  ORDER_PAYMENT
+  ORDER_REFUND
+  TRANSFER
+}
+
+enum TransactionDirection {
+  IN
+  OUT
+}
+
+enum TransactionStatus {
+  PENDING
+  POSTED
+  REVERSED
+  FAILED
+}
+
+enum ReferenceType {
+  ORDER
+  PAYMENT
+  REFUND
+  BONUS_RECORD
+  ADJUSTMENT
+  TRANSFER
+  INVESTMENT
+  MANUAL
+  SYSTEM
+}
+
+/// Cached balance projection. WalletTransaction is the source of truth; the
+/// cached fields here are only ever written inside the same DB transaction
+/// that appends the corresponding ledger row (see WalletLedgerService).
+model Wallet {
+  id            String       @id @default(uuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          WalletType
+  status        WalletStatus @default(ACTIVE)
+  currency      String
+  balanceMinor  BigInt       @default(0)
+  reservedMinor BigInt       @default(0)
+  allowNegative Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  transactions       WalletTransaction[]
+  adjustmentRequests WalletAdjustmentRequest[]
+
+  @@unique([userId, type])
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id                String               @id @default(uuid())
+  walletId          String
+  wallet            Wallet               @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  type              TransactionType
+  direction         TransactionDirection
+  status            TransactionStatus    @default(POSTED)
+  amountMinor       BigInt
+  currency          String
+  balanceAfterMinor BigInt
+  description       String
+  descriptionCode   String?
+  referenceType     ReferenceType?
+  referenceId       String?
+  referenceLabel    String?
+  reversalOfId      String?              @unique
+  reversalOf        WalletTransaction?   @relation("Reversal", fields: [reversalOfId], references: [id])
+  reversedBy        WalletTransaction?   @relation("Reversal")
+  /// Guarantees a retried request can never post twice.
+  idempotencyKey    String?              @unique
+  createdAt         DateTime             @default(now())
+  postedAt          DateTime?
+
+  @@index([walletId, createdAt])
+  @@index([referenceType, referenceId])
+  @@map("wallet_transactions")
+}
+
+model WalletAdjustmentRequest {
+  id                  String                  @id @default(uuid())
+  walletId            String
+  wallet              Wallet                  @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  amountMinor         BigInt
+  currency            String
+  direction           TransactionDirection
+  reason              String
+  status              AdjustmentRequestStatus @default(PENDING_APPROVAL)
+  requestedById       String
+  requestedBy         User                    @relation("AdjustmentRequestedBy", fields: [requestedById], references: [id])
+  reviewedById        String?
+  reviewedBy          User?                   @relation("AdjustmentReviewedBy", fields: [reviewedById], references: [id])
+  reviewNote          String?
+  walletTransactionId String?                 @unique
+  idempotencyKey      String                  @unique
+  createdAt           DateTime                @default(now())
+  reviewedAt          DateTime?
+
+  @@index([walletId])
+  @@index([status])
+  @@map("wallet_adjustment_requests")
+}
+
+enum AdjustmentRequestStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  APPLIED
+}
+
+enum PointTransactionType {
+  EARNED
+  SPENT
+  ADJUSTED
+  EXPIRED
+  REVERSED
+}
+
+model PointTransaction {
+  id              String               @id @default(uuid())
+  userId          String
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            PointTransactionType
+  points          Int
+  balanceAfter    Int
+  description     String
+  descriptionCode String?
+  referenceType   ReferenceType?
+  referenceId     String?
+  referenceLabel  String?
+  expiresAt       DateTime?
+  idempotencyKey  String?              @unique
+  createdAt       DateTime             @default(now())
+
+  @@index([userId, createdAt])
+  @@map("point_transactions")
+}
+
+enum BonusRuleType {
+  DIRECT_REFERRAL
+  TEAM_VOLUME
+  RANK_ACHIEVEMENT
+  ORDER_PERCENTAGE
+  FIXED_GRANT
+  CUSTOM
+}
+
+model BonusRule {
+  id            String        @id @default(uuid())
+  name          String
+  code          String        @unique
+  type          BonusRuleType
+  description   String?
+  active        Boolean       @default(true)
+  /// Rule-specific parameters, interpreted only by the matching calculator
+  /// service. No formula is hard-coded outside the calculator it names.
+  configuration Json
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  records BonusRecord[]
+
+  @@map("bonus_rules")
+}
+
+enum BonusRecordStatus {
+  PENDING
+  APPROVED
+  PAID
+  REJECTED
+  REVERSED
+}
+
+model BonusRecord {
+  id                  String            @id @default(uuid())
+  memberId            String
+  member              User              @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  ruleId              String
+  rule                BonusRule         @relation(fields: [ruleId], references: [id])
+  amountMinor         BigInt
+  currency            String
+  status              BonusRecordStatus @default(PENDING)
+  sourceType          ReferenceType?
+  sourceId            String?
+  sourceLabel         String?
+  calculationBasis    Json?
+  walletTransactionId String?           @unique
+  periodStart         DateTime?
+  periodEnd           DateTime?
+  createdAt           DateTime          @default(now())
+  paidAt              DateTime?
+
+  @@index([memberId, createdAt])
+  @@index([ruleId])
+  @@index([status])
+  @@map("bonus_records")
+}
+
+// =============================================================================
+// Catalog
+// =============================================================================
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  slug        String     @unique
+  name        String
+  description String?
+  imageUrl    String?
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("CategoryTree")
+  position    Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  products Product[]
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+model Product {
+  id                  String        @id @default(uuid())
+  slug                String        @unique
+  sku                 String        @unique
+  name                String
+  shortDescription    String?
+  description         String?
+  categoryId          String?
+  category            Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  currency            String
+  basePriceMinor      BigInt
+  compareAtPriceMinor BigInt?
+  pointsAwarded       Int           @default(0)
+  status              ProductStatus @default(DRAFT)
+  isFeatured          Boolean       @default(false)
+  publishedAt         DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  images     ProductImage[]
+  attributes ProductAttribute[]
+  variants   ProductVariant[]
+  orderItems OrderItem[]
+
+  @@index([categoryId])
+  @@index([status])
+  @@map("products")
+}
+
+model ProductImage {
+  id        String  @id @default(uuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  position  Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+model ProductAttribute {
+  id            String  @id @default(uuid())
+  productId     String
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name          String
+  value         String
+  isVariantAxis Boolean @default(false)
+
+  @@index([productId])
+  @@map("product_attributes")
+}
+
+model ProductVariant {
+  id                  String   @id @default(uuid())
+  productId           String
+  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku                 String   @unique
+  name                String
+  priceMinor          BigInt
+  compareAtPriceMinor BigInt?
+  pointsAwarded       Int      @default(0)
+  imageUrl            String?
+  /// Variant axis values, e.g. { "color": "Red", "size": "M" }.
+  options             Json
+  isDefault           Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  inventory  Inventory?
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  BACKORDER
+}
+
+model Inventory {
+  variantId         String         @id
+  variant           ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  onHand            Int            @default(0)
+  reserved          Int            @default(0)
+  lowStockThreshold Int            @default(5)
+  updatedAt         DateTime       @updatedAt
+
+  transactions InventoryTransaction[]
+
+  @@map("inventory")
+}
+
+enum InventoryTransactionType {
+  RESTOCK
+  RESERVE
+  RELEASE
+  FULFILL
+  ADJUSTMENT
+  RETURN
+}
+
+model InventoryTransaction {
+  id             String                   @id @default(uuid())
+  variantId      String
+  inventory      Inventory                @relation(fields: [variantId], references: [variantId], onDelete: Cascade)
+  type           InventoryTransactionType
+  quantityDelta  Int
+  reason         String?
+  referenceType  ReferenceType?
+  referenceId    String?
+  idempotencyKey String?                  @unique
+  actorId        String?
+  createdAt      DateTime                 @default(now())
+
+  @@index([variantId, createdAt])
+  @@map("inventory_transactions")
+}
+
+// =============================================================================
+// Cart / checkout / orders
+// =============================================================================
+
+model Cart {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currency  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id              String         @id @default(uuid())
+  cartId          String
+  cart            Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variantId       String
+  variant         ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  quantity        Int
+  /// Unit price at the moment the item was added/last confirmed, used only to
+  /// detect and surface price drift - never trusted for totals.
+  addedPriceMinor BigInt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([cartId, variantId])
+  @@map("cart_items")
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum DeliveryMethod {
+  STANDARD
+  EXPRESS
+  PICKUP
+}
+
+model Order {
+  id              String         @id @default(uuid())
+  orderNumber     String         @unique
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  status          OrderStatus    @default(DRAFT)
+  /// Denormalized from the latest Payment for fast filtering; Payment rows
+  /// remain the source of truth and this column is only ever written by the
+  /// same service method that mutates the Payment.
+  paymentStatus   PaymentStatus  @default(PENDING)
+  currency        String
+  subtotalMinor   BigInt
+  discountMinor   BigInt         @default(0)
+  shippingMinor   BigInt         @default(0)
+  taxMinor        BigInt         @default(0)
+  totalMinor      BigInt
+  deliveryMethod  DeliveryMethod
+  /// Snapshot of the address at checkout time - later address-book edits
+  /// never rewrite order history.
+  shippingAddress Json
+  pointsAwarded   Int            @default(0)
+  note            String?
+  idempotencyKey  String         @unique
+  placedAt        DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  items     OrderItem[]
+  payments  Payment[]
+  shipments Shipment[]
+  timeline  OrderTimelineEntry[]
+
+  @@index([userId, placedAt])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id             String         @id @default(uuid())
+  orderId        String
+  order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productName    String
+  variantId      String
+  variant        ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  variantName    String
+  sku            String
+  imageUrl       String?
+  quantity       Int
+  unitPriceMinor BigInt
+  lineTotalMinor BigInt
+  pointsAwarded  Int            @default(0)
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+enum PaymentMethod {
+  E_ACCOUNT
+  BONUS_POOL
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+}
+
+model Payment {
+  id                  String        @id @default(uuid())
+  orderId             String
+  order               Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  method              PaymentMethod
+  status              PaymentStatus @default(PENDING)
+  amountMinor         BigInt
+  refundedAmountMinor BigInt        @default(0)
+  currency            String
+  reference           String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  paidAt              DateTime?
+
+  transactions PaymentTransaction[]
+
+  @@index([orderId])
+  @@map("payments")
+}
+
+enum PaymentTransactionType {
+  CHARGE
+  REFUND
+}
+
+model PaymentTransaction {
+  id             String                 @id @default(uuid())
+  paymentId      String
+  payment        Payment                @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  type           PaymentTransactionType
+  amountMinor    BigInt
+  status         PaymentStatus
+  idempotencyKey String                 @unique
+  reason         String?
+  createdAt      DateTime               @default(now())
+
+  @@index([paymentId])
+  @@map("payment_transactions")
+}
+
+enum ShipmentStatus {
+  PENDING
+  PACKED
+  SHIPPED
+  IN_TRANSIT
+  DELIVERED
+  RETURNED
+  CANCELLED
+}
+
+model Shipment {
+  id             String         @id @default(uuid())
+  orderId        String
+  order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status         ShipmentStatus @default(PENDING)
+  courier        String?
+  trackingNumber String?
+  trackingUrl    String?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([orderId])
+  @@map("shipments")
+}
+
+model OrderTimelineEntry {
+  id        String       @id @default(uuid())
+  orderId   String
+  order     Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  code      String
+  status    OrderStatus?
+  note      String?
+  actorId   String?
+  createdAt DateTime     @default(now())
+
+  @@index([orderId, createdAt])
+  @@map("order_timeline_entries")
+}
+
+// =============================================================================
+// Promotions
+// =============================================================================
+
+enum PromotionStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  ENDED
+  ARCHIVED
+}
+
+model Promotion {
+  id          String          @id @default(uuid())
+  title       String
+  description String?
+  imageUrl    String?
+  /// ISO-3166-1 alpha-2 region codes; empty array means globally visible.
+  regions     String[]
+  status      PromotionStatus @default(DRAFT)
+  startAt     DateTime
+  endAt       DateTime?
+  linkPath    String?
+  rules       Json            @default("{}")
+  position    Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([status])
+  @@map("promotions")
+}
+
+// =============================================================================
+// Investment
+// =============================================================================
+
+enum InvestmentPlanStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+model InvestmentPlan {
+  id                 String               @id @default(uuid())
+  name               String
+  slug               String               @unique
+  description        String?
+  minimumAmountMinor BigInt
+  maximumAmountMinor BigInt?
+  currency           String
+  termDays           Int?
+  riskLabel          String?
+  status             InvestmentPlanStatus @default(DRAFT)
+  /// Admin-supplied parameters only. No return/yield is computed by this
+  /// platform; see docs/ARCHITECTURE.md "Investment" for the isolation rule.
+  configuration      Json                 @default("{}")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  enrollments InvestmentEnrollment[]
+
+  @@map("investment_plans")
+}
+
+enum InvestmentEnrollmentStatus {
+  PENDING
+  ACTIVE
+  MATURED
+  CANCELLED
+}
+
+model InvestmentEnrollment {
+  id             String                     @id @default(uuid())
+  planId         String
+  plan           InvestmentPlan             @relation(fields: [planId], references: [id])
+  userId         String
+  user           User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  principalMinor BigInt
+  currency       String
+  status         InvestmentEnrollmentStatus @default(PENDING)
+  startedAt      DateTime?
+  maturesAt      DateTime?
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+
+  transactions InvestmentTransaction[]
+  snapshots    InvestmentPerformanceSnapshot[]
+
+  @@index([userId])
+  @@index([planId])
+  @@map("investment_enrollments")
+}
+
+enum InvestmentTransactionType {
+  CONTRIBUTION
+  WITHDRAWAL
+  ADJUSTMENT
+}
+
+model InvestmentTransaction {
+  id             String                    @id @default(uuid())
+  enrollmentId   String
+  enrollment     InvestmentEnrollment      @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  type           InvestmentTransactionType
+  amountMinor    BigInt
+  currency       String
+  idempotencyKey String                    @unique
+  createdAt      DateTime                  @default(now())
+
+  @@index([enrollmentId])
+  @@map("investment_transactions")
+}
+
+/// Admin-entered performance data points. Never computed by this system.
+model InvestmentPerformanceSnapshot {
+  id           String               @id @default(uuid())
+  enrollmentId String
+  enrollment   InvestmentEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  valueMinor   BigInt
+  currency     String
+  recordedFor  DateTime             @db.Date
+  note         String?
+  createdAt    DateTime             @default(now())
+
+  @@index([enrollmentId, recordedFor])
+  @@map("investment_performance_snapshots")
+}
+
+// =============================================================================
+// Health
+// =============================================================================
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNSPECIFIED
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHT
+  MODERATE
+  ACTIVE
+  VERY_ACTIVE
+}
+
+enum HealthGoal {
+  WEIGHT_LOSS
+  MAINTENANCE
+  WEIGHT_GAIN
+  FITNESS
+}
+
+model HealthProfile {
+  userId            String        @id
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gender            Gender        @default(UNSPECIFIED)
+  birthDate         DateTime?     @db.Date
+  heightCm          Int?
+  weightGrams       Int?
+  activityLevel     ActivityLevel @default(MODERATE)
+  goal              HealthGoal    @default(MAINTENANCE)
+  targetWeightGrams Int?
+  notes             String?
+  updatedAt         DateTime      @updatedAt
+
+  @@map("health_profiles")
+}
+
+// --- community ---------------------------------------------------------------
+
+enum ContentStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ModerationStatus {
+  VISIBLE
+  FLAGGED
+  HIDDEN
+  REMOVED
+}
+
+model CommunityPost {
+  id               String        @id @default(uuid())
+  authorId         String
+  author           User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title            String?
+  body             String
+  imageUrls        String[]
+  tags             String[]
+  moderationStatus ContentStatus @default(PUBLISHED)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  comments  CommunityComment[]
+  reactions CommunityReaction[]
+  reports   CommunityReport[]
+
+  @@index([authorId])
+  @@index([moderationStatus, createdAt])
+  @@map("community_posts")
+}
+
+model CommunityComment {
+  id               String           @id @default(uuid())
+  postId           String
+  post             CommunityPost    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId         String
+  author           User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body             String
+  moderationStatus ModerationStatus @default(VISIBLE)
+  createdAt        DateTime         @default(now())
+
+  reports CommunityReport[]
+
+  @@index([postId, createdAt])
+  @@map("community_comments")
+}
+
+enum ReactionType {
+  LIKE
+  CELEBRATE
+  SUPPORT
+  INSIGHTFUL
+}
+
+model CommunityReaction {
+  id        String        @id @default(uuid())
+  postId    String
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ReactionType
+  createdAt DateTime      @default(now())
+
+  @@unique([postId, userId])
+  @@map("community_reactions")
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+model CommunityReport {
+  id         String            @id @default(uuid())
+  targetType String
+  postId     String?
+  post       CommunityPost?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId  String?
+  comment    CommunityComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User              @relation("ReportedBy", fields: [reporterId], references: [id], onDelete: Cascade)
+  reason     String
+  details    String?
+  status     ReportStatus      @default(OPEN)
+  resolvedAt DateTime?
+  createdAt  DateTime          @default(now())
+
+  @@index([status])
+  @@map("community_reports")
+}
+
+// --- sport ranking -------------------------------------------------------------
+
+enum SportMetricUnit {
+  STEPS
+  METERS
+  MINUTES
+  COUNT
+  POINTS
+}
+
+model SportMetric {
+  id               String          @id @default(uuid())
+  code             String          @unique
+  name             String
+  unit             SportMetricUnit
+  /// Points awarded per unit, in thousandths, so scoring stays integer-only.
+  scoreWeightMilli Int
+  active           Boolean         @default(true)
+
+  scores SportScore[]
+
+  @@map("sport_metrics")
+}
+
+model SportScore {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  metricId    String
+  metric      SportMetric @relation(fields: [metricId], references: [id])
+  value       Int
+  score       Int
+  recordedFor DateTime    @db.Date
+  createdAt   DateTime    @default(now())
+
+  @@unique([userId, metricId, recordedFor])
+  @@index([metricId, recordedFor])
+  @@map("sport_scores")
+}
+
+enum RankingPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  ALL_TIME
+}
+
+/// Pre-aggregated by the ranking-aggregation worker (BullMQ) so the ranking
+/// endpoint never scans raw scores on every request.
+model SportRanking {
+  id          String        @id @default(uuid())
+  period      RankingPeriod
+  metricCode  String?
+  periodStart DateTime      @db.Date
+  periodEnd   DateTime      @db.Date
+  userId      String
+  rank        Int
+  score       Int
+  breakdown   Json
+  generatedAt DateTime      @default(now())
+
+  @@unique([period, metricCode, periodStart, userId])
+  @@index([period, metricCode, periodStart, rank])
+  @@map("sport_rankings")
+}
+
+// --- content -------------------------------------------------------------------
+
+model HealthArticleCategory {
+  id   String @id @default(uuid())
+  slug String @unique
+  name String
+
+  articles HealthArticle[]
+
+  @@map("health_article_categories")
+}
+
+model HealthArticle {
+  id            String                 @id @default(uuid())
+  slug          String                 @unique
+  title         String
+  excerpt       String?
+  bodyHtml      String
+  coverImageUrl String?
+  categoryId    String?
+  category      HealthArticleCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  authorName    String?
+  tags          String[]
+  isFeatured    Boolean                @default(false)
+  status        ContentStatus          @default(DRAFT)
+  publishedAt   DateTime?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  @@index([categoryId])
+  @@index([status])
+  @@map("health_articles")
+}
+
+// =============================================================================
+// Platform: notifications, audit, settings, translations
+// =============================================================================
+
+enum NotificationType {
+  ORDER
+  PAYMENT
+  FULFILLMENT
+  BONUS
+  SYSTEM
+  PROMOTION
+  COMMUNITY
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  code      String
+  title     String
+  body      String
+  params    Json?
+  linkPath  String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String    @id @default(uuid())
+  actorId    String?
+  actor      User?     @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorRole  RoleName?
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  key         String   @id
+  value       Json
+  isPublic    Boolean  @default(false)
+  description String?
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model Translation {
+  id        String   @id @default(uuid())
+  locale    String
+  namespace String
+  key       String
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@unique([locale, namespace, key])
+  @@index([namespace])
+  @@map("translations")
+}
