@@ -21,6 +21,7 @@ export * from './composite/wallet-transaction-row.js';
 export * from './composite/timeline.js';
 export * from './composite/tree-node.js';
 export * from './composite/drawer.js';
+export * from './composite/image-lightbox.js';
 export * from './composite/confirm-dialog.js';
 export * from './composite/toast.js';
 export * from './composite/search-filter.js';

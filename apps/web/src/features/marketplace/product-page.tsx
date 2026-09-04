@@ -1,13 +1,16 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Minus, Plus } from 'lucide-react';
-import { Badge, Button, StatusBadge, toast } from '@ptg/ui';
+import { ChevronDown, ChevronLeft, ChevronRight, Expand, Minus, Plus } from 'lucide-react';
+import { Badge, Button, ImageLightbox, StatusBadge, toast } from '@ptg/ui';
 import { QueryState } from '@/components/query-state';
 import { formatMoney } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth.store';
 import { useProduct } from './api';
 import { useAddCartItem } from '@/features/cart/api';
+
+/** Height the "Product Details" panel stack collapses to before "show all". */
+const DETAIL_COLLAPSED_HEIGHT = 520;
 
 export default function ProductPage() {
   const { t } = useTranslation();
@@ -20,6 +23,8 @@ export default function ProductPage() {
   const [selectedVariantId, setSelectedVariantId] = React.useState<string | null>(null);
   const [quantity, setQuantity] = React.useState(1);
   const [activeImage, setActiveImage] = React.useState(0);
+  const [lightbox, setLightbox] = React.useState<{ source: 'gallery' | 'detail'; index: number } | null>(null);
+  const [detailsExpanded, setDetailsExpanded] = React.useState(false);
 
   const product = productQuery.data;
   const variant = product?.variants.find((v) => v.id === selectedVariantId) ?? product?.variants.find((v) => v.isDefault) ?? product?.variants[0];
@@ -33,6 +38,11 @@ export default function ProductPage() {
   React.useEffect(() => {
     if (product && !selectedVariantId) setSelectedVariantId(product.variants.find((v) => v.isDefault)?.id ?? product.variants[0]?.id ?? null);
   }, [product, selectedVariantId]);
+
+  const stepImage = (delta: number) => {
+    if (gallery.length === 0) return;
+    setActiveImage((i) => (i + delta + gallery.length) % gallery.length);
+  };
 
   const handleAddToCart = () => {
     if (!user) return navigate('/login', { state: { from: `/shop/product/${slug}` } });
@@ -49,18 +59,59 @@ export default function ProductPage() {
         <div className="flex flex-col gap-8">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="flex flex-col gap-2">
-              <div className="aspect-square overflow-hidden rounded-lg border border-border bg-muted">
+              <div className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted">
                 {gallery[activeImage] ? (
-                  <img src={gallery[activeImage].url} alt={gallery[activeImage].alt ?? product.name} className="size-full object-contain" />
+                  <button
+                    type="button"
+                    onClick={() => setLightbox({ source: 'gallery', index: activeImage })}
+                    className="size-full cursor-zoom-in"
+                    aria-label={t('marketplace.viewFullImage')}
+                  >
+                    <img src={gallery[activeImage].url} alt={gallery[activeImage].alt ?? product.name} className="size-full object-contain" />
+                  </button>
+                ) : null}
+
+                {gallery.length > 0 ? (
+                  <span className="pointer-events-none absolute bottom-2 end-2 flex items-center gap-1 rounded-full bg-black/50 px-2 py-1 text-2xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                    <Expand className="size-3" />
+                    {t('marketplace.viewFullImage')}
+                  </span>
+                ) : null}
+
+                {gallery.length > 1 ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => stepImage(-1)}
+                      aria-label={t('marketplace.previousImage')}
+                      className="absolute left-2 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-card/80 opacity-0 shadow-card transition-opacity hover:bg-card focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring group-hover:opacity-100"
+                    >
+                      <ChevronLeft className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => stepImage(1)}
+                      aria-label={t('marketplace.nextImage')}
+                      className="absolute right-2 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-card/80 opacity-0 shadow-card transition-opacity hover:bg-card focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring group-hover:opacity-100"
+                    >
+                      <ChevronRight className="size-4" />
+                    </button>
+                    <span className="num pointer-events-none absolute start-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-2xs tabular-nums text-white">
+                      {activeImage + 1} / {gallery.length}
+                    </span>
+                  </>
                 ) : null}
               </div>
+
               {gallery.length > 1 ? (
-                <div className="flex gap-2">
+                <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
                   {gallery.map((img, index) => (
                     <button
                       key={img.id}
                       onClick={() => setActiveImage(index)}
-                      className={`size-14 shrink-0 overflow-hidden rounded-md border ${index === activeImage ? 'border-primary' : 'border-border'}`}
+                      aria-label={`${product.name} ${index + 1}`}
+                      aria-current={index === activeImage}
+                      className={`size-14 shrink-0 overflow-hidden rounded-md border-2 transition-colors ${index === activeImage ? 'border-primary' : 'border-border hover:border-muted-foreground/40'}`}
                     >
                       <img src={img.url} alt="" className="size-full object-cover" />
                     </button>
@@ -136,14 +187,53 @@ export default function ProductPage() {
 
           {detailImages.length > 0 ? (
             <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-foreground">{t('marketplace.productDetails')}</h2>
-              <div className="mx-auto w-full max-w-2xl overflow-hidden rounded-lg border border-border bg-card">
-                {detailImages.map((img) => (
-                  <img key={img.id} src={img.url} alt={img.alt ?? ''} loading="lazy" className="block w-full" />
-                ))}
+              <div className="flex items-baseline justify-between">
+                <h2 className="text-sm font-semibold text-foreground">{t('marketplace.productDetails')}</h2>
+                <span className="num text-2xs text-muted-foreground">{t('marketplace.imageCount', { value: detailImages.length })}</span>
+              </div>
+
+              <div className="mx-auto w-full max-w-2xl">
+                <div
+                  className="relative overflow-hidden rounded-lg border border-border bg-card"
+                  style={detailsExpanded ? undefined : { maxHeight: DETAIL_COLLAPSED_HEIGHT }}
+                >
+                  {detailImages.map((img, index) => (
+                    <button
+                      key={img.id}
+                      type="button"
+                      onClick={() => setLightbox({ source: 'detail', index })}
+                      className="block w-full cursor-zoom-in"
+                      aria-label={t('marketplace.viewFullImage')}
+                    >
+                      <img src={img.url} alt={img.alt ?? ''} loading="lazy" className="block w-full" />
+                    </button>
+                  ))}
+
+                  {!detailsExpanded ? (
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-card to-transparent" />
+                  ) : null}
+                </div>
+
+                <div className="mt-2 flex justify-center">
+                  <Button variant="outline" size="sm" onClick={() => setDetailsExpanded((v) => !v)}>
+                    {detailsExpanded ? t('marketplace.showLessImages') : t('marketplace.showAllImages', { value: detailImages.length })}
+                    <ChevronDown className={`ms-1 size-3.5 transition-transform ${detailsExpanded ? 'rotate-180' : ''}`} />
+                  </Button>
+                </div>
               </div>
             </section>
           ) : null}
+
+          <ImageLightbox
+            images={lightbox?.source === 'detail' ? detailImages : gallery}
+            index={lightbox?.index ?? null}
+            title={product.name}
+            onIndexChange={(index) => {
+              setLightbox((l) => (l ? { ...l, index } : l));
+              if (lightbox?.source === 'gallery') setActiveImage(index);
+            }}
+            onClose={() => setLightbox(null)}
+          />
         </div>
       ) : null}
     </QueryState>

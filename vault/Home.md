@@ -23,6 +23,9 @@ happened session to session.
 
 ## Recent sessions
 
+- [[Sessions/2026-09-04-7]] — product images got a real viewer: a shared
+  full-screen lightbox, gallery arrows/counter, and the endless "Product
+  Details" stack collapsed behind a "show all" toggle
 - [[Sessions/2026-09-04-6]] — the site went live on the Oracle Cloud box:
   rootless podman on ARM, `pricelens` stopped to free its ports, and
   `update-server.bat` as the one command that redeploys it
