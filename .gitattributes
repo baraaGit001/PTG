@@ -1,0 +1,7 @@
+# Shell scripts run on the Linux server; a CRLF here makes bash fail with
+# "\r: command not found" or, worse, a silently mangled last argument.
+# core.autocrlf=true on the Windows checkout would do exactly that.
+*.sh text eol=lf
+
+# The deploy driver only ever runs on Windows.
+*.bat text eol=crlf

@@ -1,6 +1,18 @@
 import { z } from 'zod';
 
 /**
+ * `z.coerce.boolean()` is `Boolean(value)`, so every non-empty string is true -
+ * `COOKIE_SECURE=false` in a .env parsed as `true`, which over plain HTTP makes
+ * the browser drop the refresh cookie and breaks sign-in with no error anywhere.
+ * Env vars are always strings, so they get a parser that reads the word.
+ */
+const envBoolean = z
+  .union([z.boolean(), z.string()])
+  .transform((value) =>
+    typeof value === 'boolean' ? value : ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase()),
+  );
+
+/**
  * Validated at process startup. The application refuses to boot if a
  * required variable is missing or malformed - fail fast beats fail silent.
  */
@@ -16,14 +28,14 @@ export const envSchema = z.object({
   JWT_REFRESH_TTL: z.coerce.number().int().positive().default(2592000),
   COOKIE_SECRET: z.string().min(16),
   COOKIE_DOMAIN: z.string().default('localhost'),
-  COOKIE_SECURE: z.coerce.boolean().default(false),
+  COOKIE_SECURE: envBoolean.default(false),
 
   S3_ENDPOINT: z.string().optional(),
   S3_REGION: z.string().default('us-east-1'),
   S3_ACCESS_KEY: z.string().optional(),
   S3_SECRET_KEY: z.string().optional(),
   S3_BUCKET: z.string().default('ptg-media'),
-  S3_FORCE_PATH_STYLE: z.coerce.boolean().default(true),
+  S3_FORCE_PATH_STYLE: envBoolean.default(true),
   S3_PUBLIC_URL: z.string().optional(),
 
   API_PORT: z.coerce.number().int().positive().default(3001),
@@ -34,7 +46,7 @@ export const envSchema = z.object({
 
   DEFAULT_CURRENCY: z.string().default('USD'),
   DEFAULT_LOCALE: z.string().default('en'),
-  DEMO_MODE: z.coerce.boolean().default(true),
+  DEMO_MODE: envBoolean.default(true),
 
   RATE_LIMIT_TTL: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_LIMIT: z.coerce.number().int().positive().default(120),

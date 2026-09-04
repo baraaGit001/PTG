@@ -1,0 +1,144 @@
+# Single-VM production stack for the PTG server (Oracle Linux 9 / aarch64,
+# rootless podman + podman-compose). Deployed by deploy/server-update.sh, which
+# is driven from Windows by update-server.bat.
+#
+# Deliberately self-contained instead of an override layered onto
+# docker-compose.yml + docker-compose.prod.yml: podman-compose implements its
+# own multi-file merge, and one file that says exactly what runs is one less
+# thing to debug over SSH.
+#
+# Differences from docker-compose.prod.yml, all forced by the box:
+#   - postgres/redis/minio publish no host ports. Only the proxy is reachable.
+#   - the API publishes no host port either: 3001 belongs to another project on
+#     this machine, and the proxy reaches the API over the compose network.
+#   - the proxy listens on 80 + 3000 (web) and 4000 (admin) - see
+#     infra/nginx/server-proxy.conf for why admin gets its own port.
+#   - images are fully qualified, because podman has no implicit docker.io.
+#
+#   podman-compose -f docker-compose.server.yml up -d --build
+
+name: ptg
+
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    container_name: ptg-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ptg}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ptg_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-ptg}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-ptg} -d ${POSTGRES_DB:-ptg}']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: docker.io/library/redis:7-alpine
+    container_name: ptg-redis
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  minio:
+    image: docker.io/minio/minio:latest
+    container_name: ptg-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-ptg_minio}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-ptg_minio_password}
+    volumes:
+      - miniodata:/data
+
+  minio-init:
+    image: docker.io/minio/mc:latest
+    container_name: ptg-minio-init
+    restart: 'no'
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 8;
+      mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-ptg_minio} ${S3_SECRET_KEY:-ptg_minio_password};
+      mc mb --ignore-existing local/${S3_BUCKET:-ptg-media};
+      mc anonymous set download local/${S3_BUCKET:-ptg-media};
+      exit 0;"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: localhost/ptg_api:latest
+    container_name: ptg-api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ptg}:${POSTGRES_PASSWORD:-ptg_dev_password}@postgres:5432/${POSTGRES_DB:-ptg}?schema=public
+      REDIS_URL: redis://redis:6379
+      S3_ENDPOINT: http://minio:9000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O - http://127.0.0.1:3001/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: /api/v1
+    image: localhost/ptg_web:latest
+    container_name: ptg-web
+    restart: unless-stopped
+    depends_on:
+      - api
+
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        VITE_API_URL: /api/v1
+    image: localhost/ptg_admin:latest
+    container_name: ptg-admin
+    restart: unless-stopped
+    depends_on:
+      - api
+
+  proxy:
+    image: docker.io/library/nginx:1.27-alpine
+    container_name: ptg-proxy
+    restart: unless-stopped
+    volumes:
+      - ./infra/nginx/server-proxy.conf:/etc/nginx/conf.d/default.conf:ro,Z
+    ports:
+      - '80:80'
+      - '3000:3000'
+      - '4000:4000'
+    depends_on:
+      - api
+      - web
+      - admin
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:

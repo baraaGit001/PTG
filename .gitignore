@@ -14,3 +14,6 @@ apps/api/prisma/.generated/
 playwright-report/
 test-results/
 *.tsbuildinfo
+*.key
+# Real server environment (secrets). deploy/server.env.example is the template.
+deploy/server.env

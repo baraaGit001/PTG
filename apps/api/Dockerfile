@@ -41,6 +41,10 @@ COPY --from=build /repo/apps/api/package.json ./apps/api/package.json
 COPY --from=build /repo/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build /repo/apps/api/prisma ./apps/api/prisma
 COPY --from=build /repo/apps/api/dist ./apps/api/dist
+# prisma/seed.ts reaches back into src/ for the placement-path helper, so the
+# half-megabyte of TypeScript comes along to keep `prisma db seed` runnable in
+# the deployed container. Nothing in dist/main.js reads it.
+COPY --from=build /repo/apps/api/src ./apps/api/src
 WORKDIR /repo/apps/api
 EXPOSE 3001
 CMD ["node", "dist/main.js"]
