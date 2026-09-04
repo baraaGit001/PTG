@@ -13,7 +13,12 @@ export interface RequestOptions {
 }
 
 function buildUrl(path: string, query?: RequestOptions['query']): string {
-  const url = new URL(`${BASE_URL}${path}`);
+  // VITE_API_URL is a relative path in the server build ('/api/v1', so the API
+  // is same-origin behind the proxy), and `new URL()` throws on a relative
+  // string unless it is given a base - which killed every request in the
+  // deployed build while dev kept working on the absolute fallback below.
+  // A base is ignored when the first argument is already absolute.
+  const url = new URL(`${BASE_URL}${path}`, window.location.origin);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value));

@@ -69,3 +69,28 @@ describe('apiRequest', () => {
     expect(useAuthStore.getState().user).toBeNull();
   });
 });
+
+describe('apiRequest with a relative VITE_API_URL', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+    vi.resetModules();
+  });
+
+  // The server build sets VITE_API_URL=/api/v1 so the API is same-origin behind
+  // the proxy. `new URL()` throws on a relative string without a base, which
+  // made every request fail before fetch was reached - invisible to the tests
+  // above, which all run on the absolute localhost fallback.
+  it('resolves paths against the page origin instead of throwing', async () => {
+    vi.stubEnv('VITE_API_URL', '/api/v1');
+    vi.resetModules();
+
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: [] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { apiRequest: request } = await import('./api-client');
+    await request('/products');
+
+    expect(fetchMock.mock.calls[0][0]).toBe(`${window.location.origin}/api/v1/products`);
+  });
+});
