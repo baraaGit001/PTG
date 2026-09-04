@@ -23,6 +23,8 @@ scoped.
 
 Skip this for trivial or purely exploratory turns — it's for work someone
 would otherwise have to reconstruct by reading the chat.
+you have the permission to run the commands you want so i don't have to run
+any thing after you finish 
 
 ## Notes
 
