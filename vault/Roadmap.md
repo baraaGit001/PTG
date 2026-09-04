@@ -22,16 +22,26 @@
 
 ## Deployed
 
-The site runs on one Oracle Cloud VM at `http://130.110.124.121` (web),
-`:4000` (admin). `update-server.bat` redeploys it from `origin/main` — see
+The site runs on one Oracle Cloud VM, sharing it with AradoBot:
+
+| | |
+| --- | --- |
+| PTG web | `http://130.110.124.121:3000/` |
+| PTG admin | `http://130.110.124.121:3000/admin/` |
+| PTG API | `http://130.110.124.121:3000/api/v1` (docs at `/docs`) |
+| AradoBot web | `http://130.110.124.121:4000/` |
+| AradoBot API | `http://130.110.124.121:4000/api` |
+
+`update-server.bat` redeploys PTG from `origin/main` — see
 [DEPLOYMENT.md](../docs/DEPLOYMENT.md) and
 [[Decisions/0008-single-vm-podman-deployment]].
 
 ## Next up
 
-- [ ] Open port 80 (and 4000) in the **OCI VCN security list** — `firewalld`
-      allows them, but the console-side rule is unverified, which is why the
-      web app also answers on the known-good `:3000` — see [[Sessions/2026-09-04-6]]
+- [ ] Open port 80 in the **OCI VCN security list** — measured as *dropped*,
+      not merely closed. The proxy already binds :80, so an ingress rule is
+      the only thing between here and serving from the bare IP — see
+      [[Sessions/2026-09-04-6]]
 - [ ] A domain + TLS, then `COOKIE_SECURE=true` and a real `COOKIE_DOMAIN` in
       `deploy/server.env` — both are deliberately off while the site is a bare
       IP over http

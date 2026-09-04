@@ -114,6 +114,38 @@ Opening a port in `firewalld` is only half of it on OCI - the VCN security
 list has to allow it too, and that is done in the Oracle Cloud console, not
 on the box.
 
+### Sharing the box with AradoBot
+
+The VM also runs AradoBot (`~/aradobot`, deployed by its own
+`deploy-oracle.bat`): a Next.js app and an Express API under **pm2**, with
+MongoDB in podman, behind an nginx container that owns `:4000`. Both of its
+processes bind loopback only. Nothing is shared with PTG except the host, so
+the only real coupling is the port budget above and 2 vCPUs.
+
+A third project, `pricelens`, is present but stopped, with
+`podman update --restart=no` set on its containers so
+`podman-restart.service` does not resurrect them. Its files and volumes are
+intact.
+
+### Troubleshooting: `EAI_AGAIN`, or containers cannot resolve each other
+
+Rootless podman runs a single `aardvark-dns` for *all* of the user's networks,
+driven by the files in
+`/run/user/$UID/containers/networks/aardvark-dns/`. Each file names the
+gateway address aardvark has to bind. If a network was recreated on a
+different subnet, its old file survives, aardvark cannot bind an address that
+no longer exists, and it **exits** — which takes DNS down for every network on
+the box, not just the stale one. The symptom shows up far from the cause: a
+build step failing with `getaddrinfo EAI_AGAIN`, or the API unable to resolve
+`postgres`.
+
+`deploy/server-update.sh` prunes entries for networks with no running
+containers before it starts anything. To check by hand:
+
+```bash
+podman run --rm --network ptg_default alpine getent hosts postgres
+```
+
 ### TLS
 
 Everything above is plain HTTP against a bare IP, which is why
