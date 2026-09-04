@@ -87,6 +87,14 @@ that updates a balance without a corresponding `WalletTransaction` /
 
 ## Sponsor / placement trees
 
+The two trees answer different questions and are expected to disagree.
+**Sponsor** is who recruited the member. **Placement** is where the member sits
+in the compensation structure, which an upline can assign elsewhere - spillover
+puts a recruit under someone else's leg, so a member's sponsor parent and
+placement parent are often different people. The Android app lists them as two
+separate entries under *My Report*, alongside Join, Members, Fulfillment Orders
+and My Bonus.
+
 `SponsorRelationship` and `PlacementRelationship` are two independent tables,
 each using an adjacency pointer (`sponsorId` / `placementParentId`) *plus* a
 materialized path (`path`, `depth`). A member's descendants are one indexed

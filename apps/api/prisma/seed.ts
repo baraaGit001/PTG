@@ -137,18 +137,30 @@ async function seedUsersAndNetwork() {
     });
   }
 
-  // Partner network: a root partner with two children, each with two of their own.
+  // Partner network. `sponsor` is who recruited the member; `placement` is where
+  // they sit in the compensation structure. The two differ on purpose - that is
+  // the whole reason there are two trees - so Elena and Farid are placed away
+  // from their sponsors the way spillover puts them in practice:
+  //
+  //   sponsor                       placement
+  //   Priya                         Priya
+  //   |- Ben                        |- Ben
+  //   |  |- Diego                   |  |- Diego
+  //   |  '- Elena                   |  |  '- Elena   (sponsored by Ben)
+  //   '- Chloe                      |  '- Farid      (sponsored by Chloe)
+  //      '- Farid                   '- Chloe
   const partnerSeeds = [
-    { memberId: 'PTG-100001', name: 'Priya Partner', sponsor: null as string | null },
-    { memberId: 'PTG-100002', name: 'Ben Builder', sponsor: 'PTG-100001' },
-    { memberId: 'PTG-100003', name: 'Chloe Chan', sponsor: 'PTG-100001' },
-    { memberId: 'PTG-100004', name: 'Diego Diaz', sponsor: 'PTG-100002' },
-    { memberId: 'PTG-100005', name: 'Elena Ema', sponsor: 'PTG-100002' },
-    { memberId: 'PTG-100006', name: 'Farid Faye', sponsor: 'PTG-100003' },
+    { memberId: 'PTG-100001', name: 'Priya Partner', sponsor: null as string | null, placement: null as string | null },
+    { memberId: 'PTG-100002', name: 'Ben Builder', sponsor: 'PTG-100001', placement: 'PTG-100001' },
+    { memberId: 'PTG-100003', name: 'Chloe Chan', sponsor: 'PTG-100001', placement: 'PTG-100001' },
+    { memberId: 'PTG-100004', name: 'Diego Diaz', sponsor: 'PTG-100002', placement: 'PTG-100002' },
+    { memberId: 'PTG-100005', name: 'Elena Ema', sponsor: 'PTG-100002', placement: 'PTG-100004' },
+    { memberId: 'PTG-100006', name: 'Farid Faye', sponsor: 'PTG-100003', placement: 'PTG-100002' },
   ];
 
   const partners: Array<{ id: string; memberId: string }> = [];
   const relationshipCache = new Map<string, { path: string; depth: number }>();
+  const placementCache = new Map<string, { path: string; depth: number }>();
 
   for (const seed of partnerSeeds) {
     const user = await prisma.user.upsert({
@@ -167,21 +179,30 @@ async function seedUsersAndNetwork() {
     });
     partners.push({ id: user.id, memberId: user.memberId });
 
-    const parentLocation = seed.sponsor ? relationshipCache.get(seed.sponsor)! : ROOT_LOCATION;
-    const parentId = seed.sponsor ? partners.find((p) => p.memberId === seed.sponsor)!.id : null;
-    const location = parentId ? computeChildLocation(parentLocation, parentId) : ROOT_LOCATION;
-    relationshipCache.set(seed.memberId, location);
+    const idOf = (memberId: string) => partners.find((p) => p.memberId === memberId)!.id;
+    const locate = (parentMemberId: string | null, cache: Map<string, { path: string; depth: number }>) => {
+      if (!parentMemberId) return { parentId: null, location: ROOT_LOCATION };
+      const parentId = idOf(parentMemberId);
+      return { parentId, location: computeChildLocation(cache.get(parentMemberId)!, parentId) };
+    };
+
+    const sponsor = locate(seed.sponsor, relationshipCache);
+    relationshipCache.set(seed.memberId, sponsor.location);
+    const placement = locate(seed.placement, placementCache);
+    placementCache.set(seed.memberId, placement.location);
 
     await prisma.sponsorRelationship.upsert({
       where: { memberId: user.id },
-      create: { memberId: user.id, sponsorId: parentId, path: location.path, depth: location.depth },
+      create: { memberId: user.id, sponsorId: sponsor.parentId, path: sponsor.location.path, depth: sponsor.location.depth },
       update: {},
     });
-    // Placement tree mirrors sponsor tree in this seed for simplicity, but is a fully independent table.
+    // The placement tree is a fully independent table, and `update` is set here
+    // so re-seeding an already-seeded demo database restores the intended shape
+    // rather than leaving whatever the old rows held.
     await prisma.placementRelationship.upsert({
       where: { memberId: user.id },
-      create: { memberId: user.id, placementParentId: parentId, path: location.path, depth: location.depth },
-      update: {},
+      create: { memberId: user.id, placementParentId: placement.parentId, path: placement.location.path, depth: placement.location.depth },
+      update: { placementParentId: placement.parentId, path: placement.location.path, depth: placement.location.depth },
     });
 
     await seedWallets(user.id, seed.sponsor ? 42500 : 128000, 8600);
