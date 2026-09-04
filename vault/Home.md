@@ -23,6 +23,8 @@ happened session to session.
 
 ## Recent sessions
 
+- [[Sessions/2026-09-04-3]] — the blank-page/MIME hunt: IDM eating every
+  `.ts` URL, a broken `pnpm build`, and four dev servers at once
 - [[Sessions/2026-09-04-2]] — first boot of the API: build cache, unbuilt
   workspace packages, type-only imports, and a global-guard wiring bug
 - [[Sessions/2026-09-04]] — vault created

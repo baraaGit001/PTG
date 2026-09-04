@@ -93,3 +93,77 @@ never ships admin code, and vice versa. They duplicate a small amount of
 plumbing (`lib/api-client.ts`, `stores/auth.store.ts`, `components/`) by
 design - everything *shared* (types, UI components, navigation map,
 constants) lives in `packages/*` instead of being copy-pasted.
+
+## Troubleshooting the dev servers
+
+### Blank page, `Failed to load module script ... MIME type of ""`
+
+Symptom: the Vite page loads (the tab title is right) but `#root` stays
+empty, and the console fills with
+
+```
+Failed to load module script: Expected a JavaScript-or-Wasm module script
+but the server responded with a MIME type of "".
+```
+
+In dev, Vite serves each source file at its own URL, so a module is fetched
+from e.g. `/src/lib/api-client.ts`. If a download manager or security tool
+on the machine claims URLs ending in `.ts` — the extension is also the one
+for MPEG transport streams — it intercepts the request inside the browser,
+never forwards it, and hands the page back an empty `204 No Content`. With
+no `Content-Type`, the browser refuses it as a module and the app never
+boots. `.tsx` files are unaffected, which is why the page partly loads.
+
+Confirming it is the machine and not the code:
+
+```bash
+curl -i http://localhost:5173/src/lib/api-client.ts   # 200 text/javascript
+```
+
+If curl gets a normal `200` for the same URL the browser 204s, nothing is
+wrong with Vite — the request is being taken before it leaves the browser.
+Adding any query string (`?x=1`) also makes it succeed, since the
+interception matches on the URL's trailing extension.
+
+**Internet Download Manager is the culprit on Windows**, and specifically its
+**`IDMWFP` filter driver** (`idmwfp.sys`, a Windows Filtering Platform
+driver) — not the browser extension. `.ts` is also the extension for MPEG
+transport streams, so IDM claims it.
+
+Because the interception is in a kernel driver:
+
+- every Chromium-based browser is affected, including a fresh profile with
+  no extensions at all;
+- killing `IDMan.exe` does **not** stop it — the driver stays loaded;
+- removing `TS` from `HKCU\Software\DownloadManager\Extensions` does not
+  stop it either, even after reloading the driver. The driver does not read
+  its list from that value.
+
+What actually works is stopping the driver (elevated):
+
+```powershell
+sc.exe stop IDMWFP              # takes effect immediately
+sc.exe config IDMWFP start= demand   # and does not come back at boot
+```
+
+Revert with `sc.exe config IDMWFP start= auto`, then reboot.
+
+The only thing lost is IDM's "advanced browser integration" — the driver
+hook that grabs downloads without the extension. IDM itself keeps working,
+and its browser extension keeps grabbing downloads normally.
+
+Changing it from IDM's own window (*Options → File Types*, remove `TS`) may
+also work and is more surgical, but it was not the path verified here.
+
+Nothing in this repo can work around it — the request never reaches the dev
+server.
+
+### Ports
+
+Both Vite configs set `strictPort: true`. A second `pnpm dev` therefore
+fails with "Port 5173 is already in use" instead of quietly starting on
+5174/5175/5176. That matters: two dev servers for the *same* app share
+`apps/<app>/node_modules/.vite/deps` and overwrite each other's optimised
+bundles, which produces its own crop of modules that fail to load. If you
+get the port error, an earlier `pnpm dev` is still running — kill it rather
+than starting a second one on another port.

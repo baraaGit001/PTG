@@ -7,11 +7,12 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./dist/esm/index.js",
+      "require": "./dist/index.js"
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.esm.json && node ../../scripts/write-esm-marker.mjs dist/esm",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src"
   },
