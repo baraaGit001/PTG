@@ -48,6 +48,7 @@ pnpm db:migrate          # applies apps/api/prisma/schema.prisma
 pnpm db:seed             # obviously-fake demo data - see prisma/seed.ts
 
 pnpm dev                 # runs api (3001), web (5173) and admin (5174) together
+                         # (reclaims those ports first if a previous run left them held)
 ```
 
 Then open:

@@ -24,7 +24,7 @@ script names without the `db:*` ones, which live only in `apps/api`).
 
 | Script | What it does |
 | --- | --- |
-| `pnpm dev` | api + web + admin, watch mode, in parallel |
+| `pnpm dev` | frees the dev ports, then api + web + admin, watch mode, in parallel |
 | `pnpm build` | builds every package/app (types → config/ui → api/web/admin) |
 | `pnpm typecheck` | `tsc --noEmit` in every package |
 | `pnpm lint` | ESLint (flat config, `@ptg/eslint-config`) in every package |
@@ -64,6 +64,14 @@ code is written against it.
   real `WalletLedgerService` through Nest's testing module) is the natural
   next step and the harness (`@nestjs/testing`, `supertest`) is already a
   dev dependency.
+- **API structural guards**: two specs scan `apps/api/src` for runtime traps
+  the compiler cannot see. `runtime-imports.spec.ts` enforces ADR 0004 (a
+  `import type`'d DTO becomes `Function` in `design:paramtypes`).
+  `prisma-query-shape.spec.ts` catches `select` and `include` on the same
+  Prisma argument object — Prisma rejects that pair at runtime, so it compiles
+  and then 500s on every request. Both fail with the offending
+  `file:line`, and both include a test proving the scanner still detects the
+  shape it guards.
 - **Web**: Vitest + Testing Library (`apps/web/vitest.config.ts`). Run
   `pnpm --filter @ptg/web test`.
 - **Web E2E**: Playwright (`apps/web/playwright.config.ts`,
@@ -164,6 +172,29 @@ Both Vite configs set `strictPort: true`. A second `pnpm dev` therefore
 fails with "Port 5173 is already in use" instead of quietly starting on
 5174/5175/5176. That matters: two dev servers for the *same* app share
 `apps/<app>/node_modules/.vite/deps` and overwrite each other's optimised
-bundles, which produces its own crop of modules that fail to load. If you
-get the port error, an earlier `pnpm dev` is still running — kill it rather
-than starting a second one on another port.
+bundles, which produces its own crop of modules that fail to load. And
+because `pnpm -r --parallel` fails fast, one stuck port took down all three
+apps.
+
+`pnpm dev` now runs [`scripts/free-dev-ports.mjs`](../scripts/free-dev-ports.mjs)
+first, so reclaiming the port is no longer a manual step:
+
+```
+pnpm dev                                # frees 3001/5173/5174, then starts all three
+pnpm dev:web                            # frees 5173 only
+node scripts/free-dev-ports.mjs 5199    # any port — handy for testing the script
+```
+
+Ports come from `.env` (`API_PORT`, `APP_URL`, `ADMIN_URL`), so changing them
+there is enough. The script is deliberately narrow: it kills a listener only
+when the process image is `node`, because the orphan it exists to clear is
+always one of ours. Anything else — Docker, another server, an IDE — is named
+and the script exits non-zero instead:
+
+```
+[dev] web port 5173 is held by python3.13.exe (pid 2916). Not killing that - stop it yourself and re-run.
+```
+
+The trade-off: `pnpm dev` now takes the ports rather than asking. If a stack
+is deliberately running and you start a second `pnpm dev`, the first one dies
+instead of the second one refusing to start.

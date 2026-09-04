@@ -34,6 +34,16 @@ const PARTNER_SELECT = {
   joinedAt: true,
 } as const;
 
+/**
+ * Prisma rejects `select` and `include` on the same object, so the partner
+ * profile has to be selected as a relation *inside* the member select rather
+ * than included alongside it.
+ */
+const MEMBER_WITH_PARTNER_SELECT = {
+  ...MEMBER_SELECT,
+  partnerProfile: { select: PARTNER_SELECT },
+} as const;
+
 @Injectable()
 export class MembersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -105,7 +115,7 @@ export class MembersService {
     if (kind === 'SPONSOR') {
       const rows = await this.prisma.sponsorRelationship.findMany({
         where: { path: { startsWith: pathPrefix }, depth: { lte: maxDepthAbsolute }, member: { ...memberFilter, ...partnerFilter } },
-        include: { member: { select: MEMBER_SELECT, include: { partnerProfile: { select: PARTNER_SELECT } } } },
+        include: { member: { select: MEMBER_WITH_PARTNER_SELECT } },
         orderBy: { depth: 'asc' },
         take: TREE.maxTraversalNodes + 1,
       });
@@ -121,7 +131,7 @@ export class MembersService {
 
     const rows = await this.prisma.placementRelationship.findMany({
       where: { path: { startsWith: pathPrefix }, depth: { lte: maxDepthAbsolute }, member: { ...memberFilter, ...partnerFilter } },
-      include: { member: { select: MEMBER_SELECT, include: { partnerProfile: { select: PARTNER_SELECT } } } },
+      include: { member: { select: MEMBER_WITH_PARTNER_SELECT } },
       orderBy: { depth: 'asc' },
       take: TREE.maxTraversalNodes + 1,
     });
@@ -188,7 +198,7 @@ export class MembersService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (delegate as any).findMany({
         where,
-        include: { member: { select: MEMBER_SELECT, include: { partnerProfile: { select: PARTNER_SELECT } } } },
+        include: { member: { select: MEMBER_WITH_PARTNER_SELECT } },
         orderBy: { depth: 'asc' },
         ...paginationArgs(query),
       }),
