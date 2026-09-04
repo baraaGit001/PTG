@@ -9,8 +9,8 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useProduct } from './api';
 import { useAddCartItem } from '@/features/cart/api';
 
-/** Height the "Product Details" panel stack collapses to before "show all". */
-const DETAIL_COLLAPSED_HEIGHT = 520;
+/** Catalog rows shown before the reader asks for "show all". */
+const DETAIL_COLLAPSED_ROWS = 2;
 
 export default function ProductPage() {
   const { t } = useTranslation();
@@ -186,41 +186,49 @@ export default function ProductPage() {
           </div>
 
           {detailImages.length > 0 ? (
-            <section className="flex flex-col gap-3">
-              <div className="flex items-baseline justify-between">
+            <section className="flex flex-col gap-5">
+              <div className="flex items-baseline justify-between border-b border-border pb-2">
                 <h2 className="text-sm font-semibold text-foreground">{t('marketplace.productDetails')}</h2>
                 <span className="num text-2xs text-muted-foreground">{t('marketplace.imageCount', { value: detailImages.length })}</span>
               </div>
 
-              <div className="mx-auto w-full max-w-2xl">
-                <div
-                  className="relative overflow-hidden rounded-lg border border-border bg-card"
-                  style={detailsExpanded ? undefined : { maxHeight: DETAIL_COLLAPSED_HEIGHT }}
-                >
-                  {detailImages.map((img, index) => (
-                    <button
-                      key={img.id}
-                      type="button"
-                      onClick={() => setLightbox({ source: 'detail', index })}
-                      className="block w-full cursor-zoom-in"
-                      aria-label={t('marketplace.viewFullImage')}
-                    >
-                      <img src={img.url} alt={img.alt ?? ''} loading="lazy" className="block w-full" />
-                    </button>
-                  ))}
+              <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 sm:gap-12">
+                {(detailsExpanded ? detailImages : detailImages.slice(0, DETAIL_COLLAPSED_ROWS)).map((img, index) => (
+                  <article
+                    key={img.id}
+                    className="grid items-center gap-4 sm:grid-cols-2 sm:gap-8"
+                  >
+                    <figure className={`m-0 ${index % 2 === 1 ? 'sm:order-2' : ''}`}>
+                      <button
+                        type="button"
+                        onClick={() => setLightbox({ source: 'detail', index })}
+                        className="block w-full cursor-zoom-in overflow-hidden rounded-lg border border-border bg-card"
+                        aria-label={t('marketplace.viewFullImage')}
+                      >
+                        <img src={img.url} alt={img.alt ?? ''} loading="lazy" className="block w-full" />
+                      </button>
+                    </figure>
 
-                  {!detailsExpanded ? (
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-card to-transparent" />
-                  ) : null}
-                </div>
+                    <div className="flex flex-col gap-2">
+                      <span className="num text-2xs uppercase tracking-widest text-muted-foreground">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                        {img.alt ?? product.shortDescription ?? product.name}
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </div>
 
-                <div className="mt-2 flex justify-center">
+              {detailImages.length > DETAIL_COLLAPSED_ROWS ? (
+                <div className="flex justify-center">
                   <Button variant="outline" size="sm" onClick={() => setDetailsExpanded((v) => !v)}>
                     {detailsExpanded ? t('marketplace.showLessImages') : t('marketplace.showAllImages', { value: detailImages.length })}
                     <ChevronDown className={`ms-1 size-3.5 transition-transform ${detailsExpanded ? 'rotate-180' : ''}`} />
                   </Button>
                 </div>
-              </div>
+              ) : null}
             </section>
           ) : null}
 
