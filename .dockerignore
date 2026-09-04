@@ -1,0 +1,26 @@
+# Host build output and dependencies must never reach the build context: the
+# native ones (argon2, Prisma engines) are built for the host platform and
+# would overwrite what `pnpm install` produces inside the image.
+node_modules
+**/node_modules
+dist
+**/dist
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+.git
+.github
+.env
+.env.*
+!.env.example
+
+vault
+docs
+**/coverage
+**/.turbo
+**/test-results
+**/playwright-report
+Dockerfile
+**/Dockerfile
+.dockerignore
+docker-compose*.yml

@@ -29,7 +29,7 @@ packages/
 
 ## Prerequisites
 
-- Node.js 20.11+
+- Node.js 22+ (pnpm 11 requires `node:sqlite`, which lands in Node 22)
 - pnpm 11.5+ (`corepack enable` will pick up the version pinned in `package.json`)
 - Docker (for PostgreSQL, Redis, and local S3-compatible storage via MinIO)
 

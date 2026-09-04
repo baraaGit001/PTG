@@ -11,7 +11,11 @@ This builds and runs:
 
 - `postgres`, `redis`, `minio` (+ `minio-init`, which creates the media bucket)
 - `api` - `apps/api/Dockerfile`, multi-stage (pnpm install → prisma
-  generate → nest build → slim `node:20-alpine` runtime)
+  generate → build `@ptg/types`/`@ptg/config` → nest build → `node:22-alpine`
+  runtime). The runtime stage keeps the workspace laid out under `/repo` and
+  copies `packages/` alongside `node_modules`, because pnpm links
+  `@ptg/config`/`@ptg/types` by relative symlink - flattening the tree breaks
+  them. `openssl` is installed so Prisma picks its openssl-3 query engine.
 - `web`, `admin` - multi-stage Vite build served by `nginx:1.27-alpine`
   (`infra/nginx/spa.conf`: SPA fallback to `index.html`, long-cache hashed
   assets, gzip)
