@@ -19,7 +19,7 @@ This builds and runs:
 - `web`, `admin` - multi-stage Vite build served by `nginx:1.27-alpine`
   (`infra/nginx/spa.conf`: SPA fallback to `index.html`, long-cache hashed
   assets, gzip)
-- `proxy` - `nginx:1.27-alpine` reverse-proxying `/api/*` and `/health*` to
+- `proxy` - `nginx:1.27-alpine` reverse-proxying `/api/*` and `/healthz*` to
   the API, `/admin/*` to the admin app, everything else to the web app
   (`infra/nginx/reverse-proxy.conf`)
 
@@ -66,7 +66,7 @@ multiplex behind nginx:
 | --- | --- |
 | `http://<ip>:3000/` | PTG web app |
 | `http://<ip>:3000/admin/` | PTG admin console |
-| `http://<ip>:3000/api/v1`, `/health`, `/docs`, `/media/` | PTG API |
+| `http://<ip>:3000/api/v1`, `/healthz`, `/docs`, `/media/` | PTG API |
 | `http://<ip>:4000/` | AradoBot web app |
 | `http://<ip>:4000/api/`, `/health` | AradoBot API |
 
