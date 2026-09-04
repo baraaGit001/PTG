@@ -69,10 +69,10 @@ async function seedSettings(): Promise<void> {
   const settings: Array<{ key: string; value: Prisma.InputJsonValue; isPublic: boolean; description: string }> = [
     { key: SETTING_KEYS.brandName, value: 'PTG Business', isPublic: true, description: 'Brand name shown across the app.' },
     { key: SETTING_KEYS.brandLogoUrl, value: '', isPublic: true, description: 'Brand logo asset URL.' },
-    { key: SETTING_KEYS.defaultCurrency, value: 'USD', isPublic: true, description: 'Default platform currency.' },
+    { key: SETTING_KEYS.defaultCurrency, value: 'ZAR', isPublic: true, description: 'Default platform currency.' },
     { key: SETTING_KEYS.defaultLocale, value: 'en', isPublic: true, description: 'Default locale for new sessions.' },
     { key: SETTING_KEYS.supportedLocales, value: ['en', 'ar', 'ja', 'zh-CN', 'es'], isPublic: true, description: 'Locales offered in the language selector.' },
-    { key: SETTING_KEYS.demoMode, value: true, isPublic: true, description: 'Marks all balances/content as demo data in the UI.' },
+    { key: SETTING_KEYS.demoMode, value: false, isPublic: true, description: 'Marks all balances/content as demo data in the UI.' },
     { key: SETTING_KEYS.guestBrowsingEnabled, value: true, isPublic: true, description: 'Allow unauthenticated catalog browsing.' },
     { key: SETTING_KEYS.registrationEnabled, value: false, isPublic: true, description: 'Self-service registration (off - members are admin-provisioned).' },
     { key: SETTING_KEYS.dashboardKpis, value: [], isPublic: false, description: 'Optional override for dashboard KPI cards.' },
@@ -234,8 +234,8 @@ async function seedWallets(userId: string, eAccountMinor: number, bonusPoolMinor
   for (const [type, amount] of [['E_ACCOUNT', eAccountMinor], ['BONUS_POOL', bonusPoolMinor]] as const) {
     const wallet = await prisma.wallet.upsert({
       where: { userId_type: { userId, type } },
-      create: { userId, type, currency: 'USD', balanceMinor: 0n },
-      update: {},
+      create: { userId, type, currency: 'ZAR', balanceMinor: 0n },
+      update: { currency: 'ZAR' },
     });
     if (wallet.balanceMinor === 0n && amount > 0) {
       await prisma.wallet.update({ where: { id: wallet.id }, data: { balanceMinor: BigInt(amount) } });
@@ -246,7 +246,7 @@ async function seedWallets(userId: string, eAccountMinor: number, bonusPoolMinor
           direction: 'IN',
           status: 'POSTED',
           amountMinor: BigInt(amount),
-          currency: 'USD',
+          currency: 'ZAR',
           balanceAfterMinor: BigInt(amount),
           description: 'Opening balance (seed data)',
           descriptionCode: 'SEED_OPENING_BALANCE',
@@ -268,51 +268,247 @@ async function seedWallets(userId: string, eAccountMinor: number, bonusPoolMinor
   });
 }
 
-async function seedCatalog() {
-  const category = await prisma.category.upsert({
-    where: { slug: 'wellness-essentials' },
-    create: { slug: 'wellness-essentials', name: 'Wellness Essentials', position: 1 },
-    update: {},
-  });
-  const category2 = await prisma.category.upsert({
-    where: { slug: 'nutrition' },
-    create: { slug: 'nutrition', name: 'Nutrition', position: 2 },
-    update: {},
-  });
+/**
+ * Catalog mirrors the live PTG Business storefront: prices are ZAR, and every
+ * item carries the PV (point value) the mobile app prints under the price.
+ * PV runs at roughly price/36 across the real lineup.
+ */
+const CATEGORY_SEEDS = [
+  { slug: 'skincare', name: 'Skincare', position: 1 },
+  { slug: 'wellness-essentials', name: 'Wellness Essentials', position: 2 },
+  { slug: 'nutrition', name: 'Nutrition', position: 3 },
+  { slug: 'personal-care', name: 'Personal Care', position: 4 },
+];
 
-  const productSeeds = [
-    { slug: 'daily-multivitamin', name: 'Daily Multivitamin', sku: 'PTG-SKU-001', priceMinor: 2499, categoryId: category.id, points: 25 },
-    { slug: 'omega-3-fish-oil', name: 'Omega-3 Fish Oil', sku: 'PTG-SKU-002', priceMinor: 1899, categoryId: category.id, points: 19 },
-    { slug: 'plant-protein-powder', name: 'Plant Protein Powder', sku: 'PTG-SKU-003', priceMinor: 3999, categoryId: category2.id, points: 40 },
-    { slug: 'electrolyte-hydration-mix', name: 'Electrolyte Hydration Mix', sku: 'PTG-SKU-004', priceMinor: 1499, categoryId: category2.id, points: 15 },
-  ];
+interface ProductSeed {
+  slug: string;
+  name: string;
+  sku: string;
+  categorySlug: string;
+  /** Unit label the app shows under the product name in the cart (Box, Bottle, ...). */
+  unit: string;
+  priceMinor: number;
+  compareAtPriceMinor?: number;
+  /** PV awarded per unit. */
+  points: number;
+  shortDescription: string;
+  description: string;
+  isFeatured?: boolean;
+  attributes?: Array<{ name: string; value: string }>;
+  /** Carousel images. */
+  gallery?: string[];
+  /** Long-form "Product Details" scroll rendered under the buy box. */
+  detail?: string[];
+}
+
+const OCUZ_DETAIL = Array.from(
+  { length: 10 },
+  (_, i) => `/products/ocuz-essence/detail-${String(i + 1).padStart(2, '0')}.jpg`,
+);
+
+const PRODUCT_SEEDS: ProductSeed[] = [
+  {
+    slug: 'ocuz-firming-rejuvenating-anti-aging-essence',
+    name: 'OCUZ Firming & Rejuvenating Anti-Aging Essence',
+    sku: 'PTG-OCUZ-ESS-30',
+    categorySlug: 'skincare',
+    unit: 'Bottle',
+    priceMinor: 75600,
+    compareAtPriceMinor: 108000,
+    points: 21,
+    isFeatured: true,
+    shortDescription:
+      'Age-defying moments - revitalize young and radiant skin. Firming, wrinkle-reducing and soothing.',
+    description: [
+      'Double peptides for anti-wrinkle',
+      'Contains double peptide anti-aging active ingredients that visibly soften the look of fine lines.',
+      '',
+      'Firming, elastic and moist',
+      'Promotes the production of collagen and elastic fibers so skin regains its plump, youthful bounce.',
+      '',
+      'Intensive care',
+      'Multiple moisturizing factors compounded with precious rare plant extracts - Portulaca Oleracea to alleviate skin inflammation, Houttuynia Cordata to relieve discomfort, and Scutellaria Baicalensis root to strengthen the skin barrier.',
+      '',
+      'Light and clear texture',
+      'Each drop is lightweight - refreshing, easily absorbed, silky and non-greasy.',
+      '',
+      'Patented technology',
+      'Artificial cell membrane material for photo-induced grafting (Patent ZL201310415990.0) and a solid-phase synthesis method for acetyl hexapeptide-8 (Patent ZL 202210025756.6).',
+    ].join('\n'),
+    attributes: [
+      { name: 'Volume', value: '30 ml' },
+      { name: 'Brand', value: 'OCUZ - PTG Passion' },
+      { name: 'Skin concern', value: 'Fine lines, loss of firmness, dullness' },
+      { name: 'Key actives', value: 'Acetyl Hexapeptide-8, artificial cell membrane technology' },
+      { name: 'Plant extracts', value: 'Portulaca Oleracea, Houttuynia Cordata, Scutellaria Baicalensis root' },
+      { name: 'Texture', value: 'Lightweight, fast-absorbing, non-greasy' },
+    ],
+    gallery: ['/products/ocuz-essence/main.jpg'],
+    detail: OCUZ_DETAIL,
+  },
+  {
+    slug: 'heme-iron-peptide-birds-nest-botanical-drink',
+    name: "Heme Iron Peptide & Bird's Nest Peptide Botanical Drink",
+    sku: 'PTG-NUT-001',
+    categorySlug: 'nutrition',
+    unit: 'Box',
+    priceMinor: 58500,
+    compareAtPriceMinor: 81000,
+    points: 16,
+    shortDescription: "Heme iron peptide paired with bird's nest peptide in a ready-to-drink botanical formula.",
+    description:
+      "A ready-to-drink botanical blend combining heme iron peptide with bird's nest peptide, formulated for everyday nutritional support.",
+    attributes: [{ name: 'Format', value: 'Liquid sachet' }],
+  },
+  {
+    slug: 'amla-prebiotic-dietary-fiber-detox-drink',
+    name: 'Amla Prebiotic High Dietary Fiber Detox Drink',
+    sku: 'PTG-NUT-002',
+    categorySlug: 'nutrition',
+    unit: 'Box',
+    priceMinor: 100800,
+    points: 30,
+    shortDescription: 'Amla-based prebiotic drink with a high dietary fiber content.',
+    description: 'A high dietary fiber drink built on amla and prebiotics to support daily digestive comfort.',
+  },
+  {
+    slug: 'double-collagen-cartilage-calcium-tablets',
+    name: 'Double Collagen Cartilage Calcium Tablets',
+    sku: 'PTG-NUT-003',
+    categorySlug: 'nutrition',
+    unit: 'Box',
+    priceMinor: 37800,
+    compareAtPriceMinor: 54000,
+    points: 11,
+    shortDescription: 'Double collagen and cartilage calcium in a convenient tablet.',
+    description: 'Tablets combining double collagen with cartilage calcium for joint and bone support.',
+  },
+  {
+    slug: 'antarctic-krill-oil-softgels',
+    name: 'Antarctic Krill Oil Softgels Capsule',
+    sku: 'PTG-WEL-001',
+    categorySlug: 'wellness-essentials',
+    unit: 'Bottle',
+    priceMinor: 56700,
+    points: 16,
+    shortDescription: 'Antarctic krill oil in an easy-to-swallow softgel capsule.',
+    description: 'Softgel capsules delivering Antarctic krill oil, a source of omega-3 phospholipids and astaxanthin.',
+  },
+  {
+    slug: 'compound-pro-biotic-solid-beverage',
+    name: 'Compound Pro-biotic Solid Beverage',
+    sku: 'PTG-WEL-002',
+    categorySlug: 'wellness-essentials',
+    unit: 'Box',
+    priceMinor: 37800,
+    compareAtPriceMinor: 54000,
+    points: 11,
+    shortDescription: 'A compound probiotic solid beverage in single-serve sachets.',
+    description: 'Single-serve probiotic sachets that dissolve in water, formulated as a compound solid beverage.',
+  },
+  {
+    slug: 'ptg-protection-anti-cavity-toothpaste',
+    name: 'PTG Protection & Anti-Cavity Toothpaste',
+    sku: 'PTG-PC-001',
+    categorySlug: 'personal-care',
+    unit: 'Tube',
+    priceMinor: 3528,
+    compareAtPriceMinor: 5040,
+    points: 1,
+    shortDescription: 'Everyday anti-cavity toothpaste from the PTG personal care line.',
+    description: 'Daily-use toothpaste formulated for cavity protection and gum care.',
+  },
+  {
+    slug: 'ptg-green-tea-polyphenol-sanitary-napkin',
+    name: 'PTG Green Tea Polyphenol Sanitary Napkin',
+    sku: 'PTG-PC-002',
+    categorySlug: 'personal-care',
+    unit: 'Pack',
+    priceMinor: 3528,
+    compareAtPriceMinor: 5040,
+    points: 1,
+    shortDescription: 'Sanitary napkins with a green tea polyphenol layer.',
+    description: 'Sanitary napkins carrying a green tea polyphenol layer for freshness and comfort.',
+  },
+];
+
+async function seedCatalog() {
+  const categoryIds = new Map<string, string>();
+  for (const seed of CATEGORY_SEEDS) {
+    const category = await prisma.category.upsert({
+      where: { slug: seed.slug },
+      create: seed,
+      update: { name: seed.name, position: seed.position },
+    });
+    categoryIds.set(seed.slug, category.id);
+  }
 
   const variantIds: string[] = [];
-  for (const seed of productSeeds) {
+  for (const seed of PRODUCT_SEEDS) {
+    const gallery = seed.gallery?.length
+      ? seed.gallery
+      : [`https://placehold.co/800x800/f4f5f7/1f2937?text=${encodeURIComponent(seed.name)}`];
+
+    const images = [
+      ...gallery.map((url, index) => ({
+        url,
+        alt: seed.name,
+        position: index,
+        isPrimary: index === 0,
+        role: 'GALLERY' as const,
+      })),
+      ...(seed.detail ?? []).map((url, index) => ({
+        url,
+        alt: `${seed.name} - detail ${index + 1}`,
+        position: gallery.length + index,
+        isPrimary: false,
+        role: 'DETAIL' as const,
+      })),
+    ];
+
+    const data = {
+      name: seed.name,
+      sku: seed.sku,
+      shortDescription: seed.shortDescription,
+      description: seed.description,
+      categoryId: categoryIds.get(seed.categorySlug)!,
+      currency: 'ZAR',
+      basePriceMinor: BigInt(seed.priceMinor),
+      compareAtPriceMinor: seed.compareAtPriceMinor != null ? BigInt(seed.compareAtPriceMinor) : null,
+      pointsAwarded: seed.points,
+      status: 'PUBLISHED' as const,
+      isFeatured: seed.isFeatured ?? false,
+      publishedAt: new Date(),
+    };
+
+    // Images and attributes are rewritten on every run so re-seeding picks up
+    // artwork and copy changes instead of silently keeping the first version.
     const product = await prisma.product.upsert({
       where: { slug: seed.slug },
-      create: {
-        slug: seed.slug,
-        name: seed.name,
-        sku: seed.sku,
-        shortDescription: `${seed.name} - developer/demo product data.`,
-        description: `${seed.name} is a demo product used to exercise the marketplace flows. Not a real item for sale.`,
-        categoryId: seed.categoryId,
-        currency: 'USD',
-        basePriceMinor: BigInt(seed.priceMinor),
-        pointsAwarded: seed.points,
-        status: 'PUBLISHED',
-        isFeatured: seed.slug === 'daily-multivitamin',
-        publishedAt: new Date(),
-        images: { create: [{ url: `https://placehold.co/600x600?text=${encodeURIComponent(seed.name)}`, isPrimary: true, position: 0 }] },
-      },
-      update: {},
+      create: { slug: seed.slug, ...data },
+      update: data,
     });
+    await prisma.productImage.deleteMany({ where: { productId: product.id } });
+    await prisma.productImage.createMany({ data: images.map((img) => ({ ...img, productId: product.id })) });
+    await prisma.productAttribute.deleteMany({ where: { productId: product.id } });
+    if (seed.attributes?.length) {
+      await prisma.productAttribute.createMany({
+        data: seed.attributes.map((attr) => ({ ...attr, productId: product.id, isVariantAxis: false })),
+      });
+    }
 
     const variant = await prisma.productVariant.upsert({
       where: { sku: seed.sku },
-      create: { productId: product.id, sku: seed.sku, name: 'Standard', priceMinor: BigInt(seed.priceMinor), pointsAwarded: seed.points, options: {}, isDefault: true },
-      update: {},
+      create: {
+        productId: product.id,
+        sku: seed.sku,
+        name: seed.unit,
+        priceMinor: BigInt(seed.priceMinor),
+        pointsAwarded: seed.points,
+        options: {},
+        isDefault: true,
+      },
+      update: { name: seed.unit, priceMinor: BigInt(seed.priceMinor), pointsAwarded: seed.points },
     });
     await prisma.inventory.upsert({
       where: { variantId: variant.id },
@@ -321,6 +517,15 @@ async function seedCatalog() {
     });
     variantIds.push(variant.id);
   }
+
+  // Retire anything left over from an earlier seed. Archiving rather than
+  // deleting keeps historical order lines - which reference the variants -
+  // intact while removing the products from the storefront.
+  await prisma.product.updateMany({
+    where: { slug: { notIn: PRODUCT_SEEDS.map((seed) => seed.slug) } },
+    data: { status: 'ARCHIVED', isFeatured: false },
+  });
+
   return variantIds;
 }
 
@@ -335,7 +540,7 @@ async function seedOrders(customerId: string, variantIds: string[]): Promise<voi
       userId: customerId,
       status: 'DELIVERED',
       paymentStatus: 'PAID',
-      currency: 'USD',
+      currency: 'ZAR',
       subtotalMinor: variant.priceMinor * 2n,
       shippingMinor: 0n,
       taxMinor: 0n,
@@ -347,7 +552,7 @@ async function seedOrders(customerId: string, variantIds: string[]): Promise<voi
       items: {
         create: [{ productId: variant.productId, productName: variant.product.name, variantId: variant.id, variantName: variant.name, sku: variant.sku, quantity: 2, unitPriceMinor: variant.priceMinor, lineTotalMinor: variant.priceMinor * 2n, pointsAwarded: variant.pointsAwarded * 2 }],
       },
-      payments: { create: { method: 'E_ACCOUNT', status: 'PAID', amountMinor: variant.priceMinor * 2n, currency: 'USD', paidAt: new Date() } },
+      payments: { create: { method: 'E_ACCOUNT', status: 'PAID', amountMinor: variant.priceMinor * 2n, currency: 'ZAR', paidAt: new Date() } },
       shipments: { create: { status: 'DELIVERED', courier: 'Demo Courier', trackingNumber: 'DEMO123456', shippedAt: new Date(), deliveredAt: new Date() } },
       timeline: {
         create: [
@@ -381,10 +586,10 @@ async function seedBonuses(partners: Array<{ id: string; memberId: string }>): P
   if (existing) return;
 
   await prisma.bonusRecord.create({
-    data: { memberId: partners[0].id, ruleId: rule.id, amountMinor: 5000n, currency: 'USD', status: 'PAID', sourceType: 'MANUAL', sourceLabel: 'Seed data', walletTransactionId: null, paidAt: new Date() },
+    data: { memberId: partners[0].id, ruleId: rule.id, amountMinor: 5000n, currency: 'ZAR', status: 'PAID', sourceType: 'MANUAL', sourceLabel: 'Seed data', walletTransactionId: null, paidAt: new Date() },
   });
   await prisma.bonusRecord.create({
-    data: { memberId: partners[1].id, ruleId: rule.id, amountMinor: 3000n, currency: 'USD', status: 'PENDING', sourceType: 'MANUAL', sourceLabel: 'Seed data' },
+    data: { memberId: partners[1].id, ruleId: rule.id, amountMinor: 3000n, currency: 'ZAR', status: 'PENDING', sourceType: 'MANUAL', sourceLabel: 'Seed data' },
   });
 }
 
@@ -459,16 +664,21 @@ async function seedInvestment(partnerId: string): Promise<void> {
     create: {
       name: 'Starter Growth Plan',
       slug: 'starter-growth-plan',
-      description: 'A demo, admin-configured plan. No return or yield is guaranteed or computed by this platform.',
-      minimumAmountMinor: 10000n,
-      maximumAmountMinor: 500000n,
-      currency: 'USD',
+      description: 'An admin-configured incentive scheme. No return or yield is guaranteed or computed by this platform.',
+      minimumAmountMinor: 100000n,
+      maximumAmountMinor: 50000000n,
+      currency: 'ZAR',
       termDays: 90,
       riskLabel: 'Conservative',
       status: 'OPEN',
       configuration: {},
     },
-    update: {},
+    update: {
+      description: 'An admin-configured incentive scheme. No return or yield is guaranteed or computed by this platform.',
+      minimumAmountMinor: 100000n,
+      maximumAmountMinor: 50000000n,
+      currency: 'ZAR',
+    },
   });
   void partnerId;
   void plan;

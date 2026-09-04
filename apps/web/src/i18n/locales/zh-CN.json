@@ -73,7 +73,8 @@
       "localization": "多语言管理",
       "auditLogs": "审计日志",
       "settings": "系统设置"
-    }
+    },
+    "investmentPlan": "投资计划"
   },
   "auth": {
     "title": "登录 PTG 商务",
@@ -91,8 +92,16 @@
     "loggingIn": "正在登录…"
   },
   "dashboard": {
-    "greeting": { "morning": "早上好", "afternoon": "下午好", "evening": "晚上好" },
-    "kpi": { "eAccount": "电子账户", "bonusPool": "奖金池", "personalPoints": "个人积分" },
+    "greeting": {
+      "morning": "早上好",
+      "afternoon": "下午好",
+      "evening": "晚上好"
+    },
+    "kpi": {
+      "eAccount": "电子账户",
+      "bonusPool": "奖金池",
+      "personalPoints": "个人积分"
+    },
     "quickActions": "快捷操作",
     "recentOrders": "最近订单",
     "recentTransactions": "最近交易",
@@ -126,7 +135,16 @@
     "shipping": "运费",
     "discount": "折扣",
     "tax": "税费",
-    "total": "总计"
+    "total": "总计",
+    "productDetails": "商品详情",
+    "specification": "规格",
+    "pvValue": "{{value}} PV",
+    "pvOnPurchase": "购买赠 +{{value}} PV",
+    "sortPrice": "价格",
+    "sortSales": "销量",
+    "sortStock": "有货",
+    "selectAll": "全选",
+    "searchPlaceholder": "搜索商品"
   },
   "orders": {
     "title": "我的订单",
@@ -134,13 +152,33 @@
     "placeOrder": "提交订单",
     "noOrders": "您还没有任何订单",
     "cancelOrder": "取消订单",
-    "trackingNumber": "运单号"
+    "trackingNumber": "运单号",
+    "shortcut": {
+      "pay": "待付款",
+      "ship": "待发货",
+      "receive": "待收货",
+      "done": "已完成"
+    },
+    "filterAll": "全部"
   },
   "health": {
     "profile": "健康档案",
     "community": "社区",
     "sportRanking": "运动排行",
-    "knowledge": "健康知识"
+    "knowledge": "健康知识",
+    "helloName": "你好，{{name}}",
+    "hubSubtitle": "掌控你的数据，享受健康的一天",
+    "todaysOverview": "今日概览",
+    "realTime": "实时",
+    "metric": {
+      "steps": "步数",
+      "calories": "卡路里 (千卡)",
+      "exercise": "运动 (分钟)"
+    },
+    "managementSubtitle": "建立档案 · 个性化饮食与训练",
+    "communitySubtitle": "分享你的健康生活",
+    "rankingSubtitle": "打卡赢徽章",
+    "knowledgeSubtitle": "精选文章 · 科学指南"
   },
   "profile": {
     "title": "个人信息",
@@ -148,10 +186,29 @@
     "displayName": "显示名称",
     "phone": "电话",
     "email": "邮箱",
-    "changePassword": "修改密码"
+    "changePassword": "修改密码",
+    "serviceCenter": "服务中心"
   },
   "errors": {
     "generic": "出现错误，请重试。",
     "notFound": "未找到。"
+  },
+  "investment": {
+    "title": "投资计划",
+    "subtitle": "最多 5 项激励方案，每年最高 500 万",
+    "availablePlans": "可选计划",
+    "myEnrollments": "我的参与",
+    "noPlans": "当前没有开放的计划",
+    "noEnrollments": "您还没有参与任何计划",
+    "minimum": "最低",
+    "maximum": "最高",
+    "noLimit": "不限",
+    "term": "期限",
+    "days": "{{count}} 天",
+    "enroll": "参与",
+    "enrolled": "已参与 {{plan}}",
+    "amountPlaceholder": "金额",
+    "belowMinimum": "最低为 {{amount}}",
+    "aboveMaximum": "最高为 {{amount}}"
   }
 }

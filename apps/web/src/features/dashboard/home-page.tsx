@@ -36,10 +36,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {dashboardQuery.data?.demoMode ? (
-        <div className="rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-xs text-warning">{t('common.demoModeBanner')}</div>
-      ) : null}
-
       <QueryState isLoading={dashboardQuery.isLoading} isError={dashboardQuery.isError} error={dashboardQuery.error} onRetry={() => dashboardQuery.refetch()} skeletonVariant="card-grid">
         {dashboardQuery.data ? (
           <>

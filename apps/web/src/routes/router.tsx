@@ -95,6 +95,11 @@ export const router = createBrowserRouter([
         path: '/app/wallet',
         element: <ProtectedRoute permissions={['wallet.read']}>{lazyPage(() => import('@/features/wallet/wallet-page'))}</ProtectedRoute>,
       },
+      {
+        path: '/app/investment',
+        element: <ProtectedRoute>{lazyPage(() => import('@/features/investment/investment-page'))}</ProtectedRoute>,
+      },
+      { path: '/app/me', element: <ProtectedRoute>{lazyPage(() => import('@/features/profile/me-page'))}</ProtectedRoute> },
       { path: '/app/profile', element: <ProtectedRoute>{lazyPage(() => import('@/features/profile/profile-page'))}</ProtectedRoute> },
       { path: '/app/addresses', element: <ProtectedRoute>{lazyPage(() => import('@/features/addresses/addresses-page'))}</ProtectedRoute> },
       { path: '/app/language', element: <ProtectedRoute>{lazyPage(() => import('@/features/language/language-page'))}</ProtectedRoute> },

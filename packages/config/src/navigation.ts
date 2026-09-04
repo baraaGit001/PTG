@@ -32,7 +32,7 @@ export const PRIMARY_NAV: NavItem[] = [
   { labelKey: 'nav.goods', path: '/shop', icon: 'Store', matchPrefix: '/shop' },
   { labelKey: 'nav.health', path: '/health', icon: 'HeartPulse', matchPrefix: '/health' },
   { labelKey: 'nav.cart', path: '/cart', icon: 'ShoppingCart', matchPrefix: '/cart' },
-  { labelKey: 'nav.me', path: '/app/profile', icon: 'User', requiresAuth: true },
+  { labelKey: 'nav.me', path: '/app/me', icon: 'User', requiresAuth: true },
 ];
 
 /** Guest-facing primary nav, used before sign-in. */
@@ -91,6 +91,7 @@ export const ME_NAV: NavSection[] = [
     titleKey: 'nav.groups.commerce',
     items: [
       { labelKey: 'nav.myOrders', path: '/orders', icon: 'Receipt', requiresAuth: true },
+      { labelKey: 'nav.investmentPlan', path: '/app/investment', icon: 'Gift', requiresAuth: true },
       {
         labelKey: 'nav.myWallet',
         path: '/app/wallet',

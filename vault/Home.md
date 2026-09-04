@@ -23,6 +23,9 @@ happened session to session.
 
 ## Recent sessions
 
+- [[Sessions/2026-09-04-4]] — matching the real PTG Business app: Demo badge
+  gone, ZAR everywhere, the OCUZ product loaded, and the My / Health /
+  Investment screens rebuilt
 - [[Sessions/2026-09-04-3]] — the blank-page/MIME hunt: IDM eating every
   `.ts` URL, a broken `pnpm build`, and four dev servers at once
 - [[Sessions/2026-09-04-2]] — first boot of the API: build cache, unbuilt

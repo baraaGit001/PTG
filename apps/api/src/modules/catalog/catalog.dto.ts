@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString, Min, ValidateNested } from 'class-validator';
-import { PRODUCT_STATUSES, type ProductStatus } from '@ptg/types';
+import { PRODUCT_IMAGE_ROLES, PRODUCT_STATUSES, type ProductImageRole, type ProductStatus } from '@ptg/types';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto.js';
 
 export class ProductListQueryDto extends PaginationQueryDto {
@@ -74,6 +74,10 @@ class ProductImageInputDto {
   @IsOptional()
   @IsBoolean()
   isPrimary?: boolean;
+
+  @IsOptional()
+  @IsIn(PRODUCT_IMAGE_ROLES)
+  role?: ProductImageRole;
 }
 
 class ProductAttributeInputDto {

@@ -73,7 +73,8 @@
       "localization": "Localization",
       "auditLogs": "Audit Logs",
       "settings": "Settings"
-    }
+    },
+    "investmentPlan": "Investment Plan"
   },
   "auth": {
     "title": "Sign in to PTG Business",
@@ -91,8 +92,16 @@
     "loggingIn": "Signing in…"
   },
   "dashboard": {
-    "greeting": { "morning": "Good morning", "afternoon": "Good afternoon", "evening": "Good evening" },
-    "kpi": { "eAccount": "E-Account", "bonusPool": "Bonus Pool", "personalPoints": "Personal Points" },
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "kpi": {
+      "eAccount": "E-Account",
+      "bonusPool": "Bonus Pool",
+      "personalPoints": "Personal Points"
+    },
     "quickActions": "Quick actions",
     "recentOrders": "Recent orders",
     "recentTransactions": "Recent transactions",
@@ -126,7 +135,16 @@
     "shipping": "Shipping",
     "discount": "Discount",
     "tax": "Tax",
-    "total": "Total"
+    "total": "Total",
+    "productDetails": "Product Details",
+    "specification": "Specification",
+    "pvValue": "{{value}} PV",
+    "pvOnPurchase": "+{{value}} PV on purchase",
+    "sortPrice": "Price",
+    "sortSales": "Sales",
+    "sortStock": "In Stock",
+    "selectAll": "Select All",
+    "searchPlaceholder": "Search products"
   },
   "orders": {
     "title": "My Orders",
@@ -134,13 +152,33 @@
     "placeOrder": "Place order",
     "noOrders": "You haven't placed any orders yet",
     "cancelOrder": "Cancel order",
-    "trackingNumber": "Tracking number"
+    "trackingNumber": "Tracking number",
+    "shortcut": {
+      "pay": "Pay",
+      "ship": "Ship",
+      "receive": "Receive",
+      "done": "Done"
+    },
+    "filterAll": "All"
   },
   "health": {
     "profile": "Health Profile",
     "community": "Community",
     "sportRanking": "Sport Ranking",
-    "knowledge": "Health Knowledge"
+    "knowledge": "Health Knowledge",
+    "helloName": "Hello, {{name}}",
+    "hubSubtitle": "Control your data, enjoy a healthy day",
+    "todaysOverview": "Today's Overview",
+    "realTime": "Real-time",
+    "metric": {
+      "steps": "Steps",
+      "calories": "Calories (kcal)",
+      "exercise": "Exercise (min)"
+    },
+    "managementSubtitle": "Build your profile · Personalized diet & training",
+    "communitySubtitle": "Share your healthy lifestyle",
+    "rankingSubtitle": "Check in & earn badges",
+    "knowledgeSubtitle": "Curated articles · Science-backed guides"
   },
   "profile": {
     "title": "Personal Information",
@@ -148,10 +186,29 @@
     "displayName": "Display name",
     "phone": "Phone",
     "email": "Email",
-    "changePassword": "Change password"
+    "changePassword": "Change password",
+    "serviceCenter": "Service Center"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "notFound": "Not found."
+  },
+  "investment": {
+    "title": "Investment Plan",
+    "subtitle": "Up to 5 incentive schemes, up to 5 million/year",
+    "availablePlans": "Available plans",
+    "myEnrollments": "My enrollments",
+    "noPlans": "No plans are open right now",
+    "noEnrollments": "You have not joined a plan yet",
+    "minimum": "Minimum",
+    "maximum": "Maximum",
+    "noLimit": "No limit",
+    "term": "Term",
+    "days": "{{count}} days",
+    "enroll": "Join",
+    "enrolled": "Joined {{plan}}",
+    "amountPlaceholder": "Amount",
+    "belowMinimum": "Minimum is {{amount}}",
+    "aboveMaximum": "Maximum is {{amount}}"
   }
 }

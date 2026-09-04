@@ -502,6 +502,11 @@ enum ProductStatus {
   ARCHIVED
 }
 
+enum ProductImageRole {
+  GALLERY
+  DETAIL
+}
+
 model Category {
   id          String     @id @default(uuid())
   slug        String     @unique
@@ -551,13 +556,16 @@ model Product {
 }
 
 model ProductImage {
-  id        String  @id @default(uuid())
+  id        String           @id @default(uuid())
   productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
   url       String
   alt       String?
-  position  Int     @default(0)
-  isPrimary Boolean @default(false)
+  position  Int              @default(0)
+  isPrimary Boolean          @default(false)
+  /// GALLERY images feed the top carousel; DETAIL images render as the long
+  /// "Product Details" scroll the mobile app shows underneath the buy box.
+  role      ProductImageRole @default(GALLERY)
 
   @@index([productId])
   @@map("product_images")

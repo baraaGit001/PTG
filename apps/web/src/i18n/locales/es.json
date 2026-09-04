@@ -73,7 +73,8 @@
       "localization": "Localización",
       "auditLogs": "Registros de auditoría",
       "settings": "Configuración"
-    }
+    },
+    "investmentPlan": "Plan de inversión"
   },
   "auth": {
     "title": "Iniciar sesión en PTG Business",
@@ -91,8 +92,16 @@
     "loggingIn": "Iniciando sesión…"
   },
   "dashboard": {
-    "greeting": { "morning": "Buenos días", "afternoon": "Buenas tardes", "evening": "Buenas noches" },
-    "kpi": { "eAccount": "Cuenta electrónica", "bonusPool": "Fondo de bonos", "personalPoints": "Puntos personales" },
+    "greeting": {
+      "morning": "Buenos días",
+      "afternoon": "Buenas tardes",
+      "evening": "Buenas noches"
+    },
+    "kpi": {
+      "eAccount": "Cuenta electrónica",
+      "bonusPool": "Fondo de bonos",
+      "personalPoints": "Puntos personales"
+    },
     "quickActions": "Acciones rápidas",
     "recentOrders": "Pedidos recientes",
     "recentTransactions": "Transacciones recientes",
@@ -126,7 +135,16 @@
     "shipping": "Envío",
     "discount": "Descuento",
     "tax": "Impuesto",
-    "total": "Total"
+    "total": "Total",
+    "productDetails": "Detalles del producto",
+    "specification": "Especificación",
+    "pvValue": "{{value}} PV",
+    "pvOnPurchase": "+{{value}} PV por la compra",
+    "sortPrice": "Precio",
+    "sortSales": "Ventas",
+    "sortStock": "En stock",
+    "selectAll": "Seleccionar todo",
+    "searchPlaceholder": "Buscar productos"
   },
   "orders": {
     "title": "Mis pedidos",
@@ -134,13 +152,33 @@
     "placeOrder": "Realizar pedido",
     "noOrders": "Aún no has realizado ningún pedido",
     "cancelOrder": "Cancelar pedido",
-    "trackingNumber": "Número de seguimiento"
+    "trackingNumber": "Número de seguimiento",
+    "shortcut": {
+      "pay": "Pagar",
+      "ship": "Enviar",
+      "receive": "Recibir",
+      "done": "Hecho"
+    },
+    "filterAll": "Todos"
   },
   "health": {
     "profile": "Perfil de salud",
     "community": "Comunidad",
     "sportRanking": "Ranking deportivo",
-    "knowledge": "Conocimiento de salud"
+    "knowledge": "Conocimiento de salud",
+    "helloName": "Hola, {{name}}",
+    "hubSubtitle": "Controla tus datos, disfruta un día saludable",
+    "todaysOverview": "Resumen de hoy",
+    "realTime": "En tiempo real",
+    "metric": {
+      "steps": "Pasos",
+      "calories": "Calorías (kcal)",
+      "exercise": "Ejercicio (min)"
+    },
+    "managementSubtitle": "Crea tu perfil · Dieta y entrenamiento personalizados",
+    "communitySubtitle": "Comparte tu estilo de vida saludable",
+    "rankingSubtitle": "Regístrate y gana insignias",
+    "knowledgeSubtitle": "Artículos seleccionados · Guías con base científica"
   },
   "profile": {
     "title": "Información personal",
@@ -148,10 +186,29 @@
     "displayName": "Nombre visible",
     "phone": "Teléfono",
     "email": "Correo electrónico",
-    "changePassword": "Cambiar contraseña"
+    "changePassword": "Cambiar contraseña",
+    "serviceCenter": "Centro de servicio"
   },
   "errors": {
     "generic": "Algo salió mal. Inténtalo de nuevo.",
     "notFound": "No encontrado."
+  },
+  "investment": {
+    "title": "Plan de inversión",
+    "subtitle": "Hasta 5 esquemas de incentivos, hasta 5 millones al año",
+    "availablePlans": "Planes disponibles",
+    "myEnrollments": "Mis inscripciones",
+    "noPlans": "No hay planes abiertos por ahora",
+    "noEnrollments": "Todavía no te has unido a un plan",
+    "minimum": "Mínimo",
+    "maximum": "Máximo",
+    "noLimit": "Sin límite",
+    "term": "Plazo",
+    "days": "{{count}} días",
+    "enroll": "Unirse",
+    "enrolled": "Te uniste a {{plan}}",
+    "amountPlaceholder": "Importe",
+    "belowMinimum": "El mínimo es {{amount}}",
+    "aboveMaximum": "El máximo es {{amount}}"
   }
 }

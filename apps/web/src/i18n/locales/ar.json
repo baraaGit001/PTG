@@ -73,7 +73,8 @@
       "localization": "الترجمة",
       "auditLogs": "سجلات التدقيق",
       "settings": "الإعدادات"
-    }
+    },
+    "investmentPlan": "خطة الاستثمار"
   },
   "auth": {
     "title": "تسجيل الدخول إلى PTG بيزنس",
@@ -91,8 +92,16 @@
     "loggingIn": "جارٍ تسجيل الدخول…"
   },
   "dashboard": {
-    "greeting": { "morning": "صباح الخير", "afternoon": "مساء الخير", "evening": "مساء الخير" },
-    "kpi": { "eAccount": "الحساب الإلكتروني", "bonusPool": "مجمع المكافآت", "personalPoints": "النقاط الشخصية" },
+    "greeting": {
+      "morning": "صباح الخير",
+      "afternoon": "مساء الخير",
+      "evening": "مساء الخير"
+    },
+    "kpi": {
+      "eAccount": "الحساب الإلكتروني",
+      "bonusPool": "مجمع المكافآت",
+      "personalPoints": "النقاط الشخصية"
+    },
     "quickActions": "إجراءات سريعة",
     "recentOrders": "الطلبات الأخيرة",
     "recentTransactions": "المعاملات الأخيرة",
@@ -126,7 +135,16 @@
     "shipping": "الشحن",
     "discount": "الخصم",
     "tax": "الضريبة",
-    "total": "الإجمالي"
+    "total": "الإجمالي",
+    "productDetails": "تفاصيل المنتج",
+    "specification": "المواصفات",
+    "pvValue": "{{value}} PV",
+    "pvOnPurchase": "‎+{{value}} PV عند الشراء",
+    "sortPrice": "السعر",
+    "sortSales": "المبيعات",
+    "sortStock": "المتوفر",
+    "selectAll": "تحديد الكل",
+    "searchPlaceholder": "ابحث عن المنتجات"
   },
   "orders": {
     "title": "طلباتي",
@@ -134,13 +152,33 @@
     "placeOrder": "إتمام الطلب",
     "noOrders": "لم تقم بأي طلبات بعد",
     "cancelOrder": "إلغاء الطلب",
-    "trackingNumber": "رقم التتبع"
+    "trackingNumber": "رقم التتبع",
+    "shortcut": {
+      "pay": "الدفع",
+      "ship": "الشحن",
+      "receive": "الاستلام",
+      "done": "مكتمل"
+    },
+    "filterAll": "الكل"
   },
   "health": {
     "profile": "الملف الصحي",
     "community": "المجتمع",
     "sportRanking": "تصنيف اللياقة",
-    "knowledge": "المعرفة الصحية"
+    "knowledge": "المعرفة الصحية",
+    "helloName": "مرحبًا، {{name}}",
+    "hubSubtitle": "تابع بياناتك واستمتع بيوم صحي",
+    "todaysOverview": "ملخص اليوم",
+    "realTime": "مباشر",
+    "metric": {
+      "steps": "الخطوات",
+      "calories": "السعرات (كيلوكالوري)",
+      "exercise": "التمرين (دقيقة)"
+    },
+    "managementSubtitle": "أنشئ ملفك · نظام غذائي وتدريب مخصص",
+    "communitySubtitle": "شارك أسلوب حياتك الصحي",
+    "rankingSubtitle": "سجّل حضورك واكسب الشارات",
+    "knowledgeSubtitle": "مقالات مختارة · أدلة مبنية على العلم"
   },
   "profile": {
     "title": "المعلومات الشخصية",
@@ -148,10 +186,29 @@
     "displayName": "اسم العرض",
     "phone": "الهاتف",
     "email": "البريد الإلكتروني",
-    "changePassword": "تغيير كلمة المرور"
+    "changePassword": "تغيير كلمة المرور",
+    "serviceCenter": "مركز الخدمة"
   },
   "errors": {
     "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
     "notFound": "غير موجود."
+  },
+  "investment": {
+    "title": "خطة الاستثمار",
+    "subtitle": "حتى ٥ برامج تحفيزية، وحتى ٥ ملايين سنويًا",
+    "availablePlans": "الخطط المتاحة",
+    "myEnrollments": "اشتراكاتي",
+    "noPlans": "لا توجد خطط متاحة حاليًا",
+    "noEnrollments": "لم تنضم إلى أي خطة بعد",
+    "minimum": "الحد الأدنى",
+    "maximum": "الحد الأقصى",
+    "noLimit": "بلا حد",
+    "term": "المدة",
+    "days": "{{count}} يوم",
+    "enroll": "انضم",
+    "enrolled": "تم الانضمام إلى {{plan}}",
+    "amountPlaceholder": "المبلغ",
+    "belowMinimum": "الحد الأدنى هو {{amount}}",
+    "aboveMaximum": "الحد الأقصى هو {{amount}}"
   }
 }

@@ -66,9 +66,6 @@ export function RootLayout() {
           left={<div className="lg:hidden">{brand}</div>}
           right={
             <>
-              {settings?.demoMode ? (
-                <span className="hidden rounded-full bg-warning/10 px-2 py-0.5 text-2xs font-medium text-warning sm:inline">Demo</span>
-              ) : null}
               <LanguageSelector
                 value={(user?.locale ?? 'en') as Locale}
                 onChange={(locale) => applyLocale(locale)}

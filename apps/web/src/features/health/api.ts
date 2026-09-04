@@ -8,6 +8,7 @@ import type {
   PaginationMeta,
   RankingResponse,
   ReactionType,
+  SportScoreDto,
   UpdateHealthProfileRequest,
 } from '@ptg/types';
 import { apiRequest, apiRequestPaginated } from '@/lib/api-client';
@@ -57,6 +58,15 @@ export function useRanking(period: string, metricCode?: string) {
   return useQuery({
     queryKey: ['sport', 'ranking', period, metricCode],
     queryFn: () => apiRequest<RankingResponse>('/sport/ranking', { query: { period, metricCode } }),
+  });
+}
+
+export function useMyScores(enabled: boolean) {
+  return useQuery<{ items: SportScoreDto[]; pagination: PaginationMeta | undefined }>({
+    queryKey: ['sport', 'scores', 'mine'],
+    // A single page covers "today" comfortably; the hub only sums today's rows.
+    queryFn: () => apiRequestPaginated<SportScoreDto>('/sport/scores', { query: { page: 1, pageSize: 50 } }),
+    enabled,
   });
 }
 

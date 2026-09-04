@@ -73,7 +73,8 @@
       "localization": "多言語管理",
       "auditLogs": "監査ログ",
       "settings": "設定"
-    }
+    },
+    "investmentPlan": "投資プラン"
   },
   "auth": {
     "title": "PTG ビジネスにサインイン",
@@ -91,8 +92,16 @@
     "loggingIn": "サインイン中…"
   },
   "dashboard": {
-    "greeting": { "morning": "おはようございます", "afternoon": "こんにちは", "evening": "こんばんは" },
-    "kpi": { "eAccount": "Eアカウント", "bonusPool": "ボーナスプール", "personalPoints": "個人ポイント" },
+    "greeting": {
+      "morning": "おはようございます",
+      "afternoon": "こんにちは",
+      "evening": "こんばんは"
+    },
+    "kpi": {
+      "eAccount": "Eアカウント",
+      "bonusPool": "ボーナスプール",
+      "personalPoints": "個人ポイント"
+    },
     "quickActions": "クイックアクション",
     "recentOrders": "最近の注文",
     "recentTransactions": "最近の取引",
@@ -126,7 +135,16 @@
     "shipping": "配送料",
     "discount": "割引",
     "tax": "税金",
-    "total": "合計"
+    "total": "合計",
+    "productDetails": "商品詳細",
+    "specification": "仕様",
+    "pvValue": "{{value}} PV",
+    "pvOnPurchase": "購入で +{{value}} PV",
+    "sortPrice": "価格",
+    "sortSales": "売上",
+    "sortStock": "在庫あり",
+    "selectAll": "すべて選択",
+    "searchPlaceholder": "商品を検索"
   },
   "orders": {
     "title": "注文履歴",
@@ -134,13 +152,33 @@
     "placeOrder": "注文を確定する",
     "noOrders": "まだ注文がありません",
     "cancelOrder": "注文をキャンセル",
-    "trackingNumber": "追跡番号"
+    "trackingNumber": "追跡番号",
+    "shortcut": {
+      "pay": "支払い",
+      "ship": "発送",
+      "receive": "受取",
+      "done": "完了"
+    },
+    "filterAll": "すべて"
   },
   "health": {
     "profile": "健康プロフィール",
     "community": "コミュニティ",
     "sportRanking": "運動ランキング",
-    "knowledge": "健康コラム"
+    "knowledge": "健康コラム",
+    "helloName": "こんにちは、{{name}}さん",
+    "hubSubtitle": "データを管理して健康な一日を",
+    "todaysOverview": "今日の概要",
+    "realTime": "リアルタイム",
+    "metric": {
+      "steps": "歩数",
+      "calories": "カロリー (kcal)",
+      "exercise": "運動 (分)"
+    },
+    "managementSubtitle": "プロフィール作成 · 食事とトレーニングの提案",
+    "communitySubtitle": "健康的な暮らしをシェア",
+    "rankingSubtitle": "チェックインしてバッジを獲得",
+    "knowledgeSubtitle": "厳選記事 · 科学に基づくガイド"
   },
   "profile": {
     "title": "個人情報",
@@ -148,10 +186,29 @@
     "displayName": "表示名",
     "phone": "電話番号",
     "email": "メールアドレス",
-    "changePassword": "パスワードを変更"
+    "changePassword": "パスワードを変更",
+    "serviceCenter": "サービスセンター"
   },
   "errors": {
     "generic": "問題が発生しました。もう一度お試しください。",
     "notFound": "見つかりませんでした。"
+  },
+  "investment": {
+    "title": "投資プラン",
+    "subtitle": "最大5つのインセンティブ制度、年間最大500万",
+    "availablePlans": "利用可能なプラン",
+    "myEnrollments": "参加中のプラン",
+    "noPlans": "現在公開中のプランはありません",
+    "noEnrollments": "まだプランに参加していません",
+    "minimum": "最低額",
+    "maximum": "上限額",
+    "noLimit": "上限なし",
+    "term": "期間",
+    "days": "{{count}}日",
+    "enroll": "参加する",
+    "enrolled": "{{plan}} に参加しました",
+    "amountPlaceholder": "金額",
+    "belowMinimum": "最低額は {{amount}} です",
+    "aboveMaximum": "上限額は {{amount}} です"
   }
 }

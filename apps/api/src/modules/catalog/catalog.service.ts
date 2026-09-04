@@ -192,7 +192,7 @@ export class CatalogService {
       ...toProductSummary(product),
       description: product.description,
       sku: product.sku,
-      images: product.images.map((img) => ({ id: img.id, url: img.url, alt: img.alt, position: img.position, isPrimary: img.isPrimary })),
+      images: product.images.map((img) => ({ id: img.id, url: img.url, alt: img.alt, position: img.position, isPrimary: img.isPrimary, role: img.role })),
       variants: product.variants.map((variant) => toVariantDto(variant, product.currency)),
       attributes: product.attributes.map((a) => ({ name: a.name, value: a.value, isVariantAxis: a.isVariantAxis })),
       pointsAwarded: product.pointsAwarded,
@@ -230,7 +230,7 @@ export class CatalogService {
           status: input.status,
           isFeatured: input.isFeatured ?? false,
           publishedAt: input.status === 'PUBLISHED' ? new Date() : null,
-          images: { create: input.images?.map((img) => ({ url: img.url, alt: img.alt, position: img.position ?? 0, isPrimary: img.isPrimary ?? false })) },
+          images: { create: input.images?.map((img) => ({ url: img.url, alt: img.alt, position: img.position ?? 0, isPrimary: img.isPrimary ?? false, role: img.role ?? 'GALLERY' })) },
           attributes: { create: input.attributes?.map((attr) => ({ name: attr.name, value: attr.value, isVariantAxis: attr.isVariantAxis ?? false })) },
         },
       });

@@ -14,12 +14,20 @@ export interface CategoryDto {
   children?: CategoryDto[];
 }
 
+export const PRODUCT_IMAGE_ROLES = ['GALLERY', 'DETAIL'] as const;
+export type ProductImageRole = (typeof PRODUCT_IMAGE_ROLES)[number];
+
 export interface ProductImageDto {
   id: string;
   url: string;
   alt: string | null;
   position: number;
   isPrimary: boolean;
+  /**
+   * GALLERY images feed the top carousel; DETAIL images are the long
+   * "Product Details" scroll rendered underneath the buy box.
+   */
+  role: ProductImageRole;
 }
 
 export interface ProductAttributeDto {
@@ -125,7 +133,7 @@ export interface ProductInput {
   pointsAwarded?: number;
   status: ProductStatus;
   isFeatured?: boolean;
-  images?: Array<{ url: string; alt?: string | null; position?: number; isPrimary?: boolean }>;
+  images?: Array<{ url: string; alt?: string | null; position?: number; isPrimary?: boolean; role?: ProductImageRole }>;
   attributes?: Array<{ name: string; value: string; isVariantAxis?: boolean }>;
   variants?: ProductVariantInput[];
 }
