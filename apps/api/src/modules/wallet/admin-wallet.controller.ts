@@ -9,7 +9,7 @@ import { AdjustmentsService } from './adjustments.service.js';
 import { BonusService } from './bonus.service.js';
 import { WalletLedgerService } from './wallet-ledger.service.js';
 import { WalletTransactionQueryDto } from './wallet.dto.js';
-import type {
+import {
   BonusRuleInputDto,
   CreateAdjustmentDto,
   CreateBonusRecordDto,

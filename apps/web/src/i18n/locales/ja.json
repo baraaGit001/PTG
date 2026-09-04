@@ -178,7 +178,38 @@
     "managementSubtitle": "プロフィール作成 · 食事とトレーニングの提案",
     "communitySubtitle": "健康的な暮らしをシェア",
     "rankingSubtitle": "チェックインしてバッジを獲得",
-    "knowledgeSubtitle": "厳選記事 · 科学に基づくガイド"
+    "knowledgeSubtitle": "厳選記事 · 科学に基づくガイド",
+    "managementPageSubtitle": "プロフィールを作成 · パーソナライズされた健康プラン",
+    "basicProfile": "基本プロフィール",
+    "height": "身長",
+    "weight": "体重",
+    "gender": "性別",
+    "dateOfBirth": "生年月日",
+    "healthGoals": "健康目標",
+    "currentGoal": "現在の目標",
+    "dailyActivity": "日常の活動量",
+    "targetWeight": "目標体重",
+    "saveProfile": "プロフィールを保存",
+    "notMedicalAdvice": "この情報は体験をパーソナライズするために使用されます。医学的な評価ではなく、医療的な助言を提供するものではありません。",
+    "genderOption": {
+      "MALE": "男性",
+      "FEMALE": "女性",
+      "OTHER": "その他",
+      "UNSPECIFIED": "未設定"
+    },
+    "goalOption": {
+      "WEIGHT_LOSS": "減量",
+      "MAINTENANCE": "体重維持",
+      "WEIGHT_GAIN": "増量",
+      "FITNESS": "体力向上"
+    },
+    "activityOption": {
+      "SEDENTARY": "座り仕事中心",
+      "LIGHT": "軽い運動",
+      "MODERATE": "中程度の運動",
+      "ACTIVE": "活動的",
+      "VERY_ACTIVE": "非常に活動的"
+    }
   },
   "profile": {
     "title": "個人情報",

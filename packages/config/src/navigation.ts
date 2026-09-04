@@ -39,7 +39,7 @@ export const PRIMARY_NAV: NavItem[] = [
 export const GUEST_PRIMARY_NAV: NavItem[] = [
   { labelKey: 'nav.home', path: '/', icon: 'Home' },
   { labelKey: 'nav.goods', path: '/catalog', icon: 'Store', matchPrefix: '/catalog' },
-  { labelKey: 'nav.health', path: '/health/knowledge', icon: 'HeartPulse' },
+  { labelKey: 'nav.health', path: '/health', icon: 'HeartPulse', matchPrefix: '/health' },
   { labelKey: 'nav.cart', path: '/cart', icon: 'ShoppingCart' },
   { labelKey: 'nav.signIn', path: '/login', icon: 'LogIn' },
 ];

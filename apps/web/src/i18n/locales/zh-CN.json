@@ -178,7 +178,38 @@
     "managementSubtitle": "建立档案 · 个性化饮食与训练",
     "communitySubtitle": "分享你的健康生活",
     "rankingSubtitle": "打卡赢徽章",
-    "knowledgeSubtitle": "精选文章 · 科学指南"
+    "knowledgeSubtitle": "精选文章 · 科学指南",
+    "managementPageSubtitle": "建立档案 · 个性化健康计划",
+    "basicProfile": "基本档案",
+    "height": "身高",
+    "weight": "体重",
+    "gender": "性别",
+    "dateOfBirth": "出生日期",
+    "healthGoals": "健康目标",
+    "currentGoal": "当前目标",
+    "dailyActivity": "日常活动",
+    "targetWeight": "目标体重",
+    "saveProfile": "保存档案",
+    "notMedicalAdvice": "这些信息用于个性化您的体验，不构成医学评估，也不提供医疗建议。",
+    "genderOption": {
+      "MALE": "男",
+      "FEMALE": "女",
+      "OTHER": "其他",
+      "UNSPECIFIED": "未指定"
+    },
+    "goalOption": {
+      "WEIGHT_LOSS": "减重",
+      "MAINTENANCE": "保持体重",
+      "WEIGHT_GAIN": "增重",
+      "FITNESS": "增强体能"
+    },
+    "activityOption": {
+      "SEDENTARY": "久坐",
+      "LIGHT": "轻度活动",
+      "MODERATE": "中度活动",
+      "ACTIVE": "活跃",
+      "VERY_ACTIVE": "非常活跃"
+    }
   },
   "profile": {
     "title": "个人信息",

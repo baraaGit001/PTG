@@ -47,6 +47,16 @@ rule is genuinely useful there. Leaving it on for the API with an
 notion of which parameter types the decorator metadata will need, so any
 autofix run would reintroduce the bug.
 
+## Enforcement
+
+The original sweep missed two files — `community.controller.ts` and
+`admin-wallet.controller.ts` — and the bug resurfaced on 2026-09-04 as a
+`400 "property page should not exist"` on the admin Community page
+(see [[../Sessions/2026-09-04-5]]). Because the failure is invisible to both
+`tsc` and ESLint, `apps/api/test/runtime-imports.spec.ts` now scans the source
+and fails on any type-only import used as a `@Body`/`@Query`/`@Param`
+parameter or as a constructor-injected class.
+
 ## Status
 
 Accepted

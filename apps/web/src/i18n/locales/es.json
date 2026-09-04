@@ -178,7 +178,38 @@
     "managementSubtitle": "Crea tu perfil · Dieta y entrenamiento personalizados",
     "communitySubtitle": "Comparte tu estilo de vida saludable",
     "rankingSubtitle": "Regístrate y gana insignias",
-    "knowledgeSubtitle": "Artículos seleccionados · Guías con base científica"
+    "knowledgeSubtitle": "Artículos seleccionados · Guías con base científica",
+    "managementPageSubtitle": "Crea tu perfil · Plan de salud personalizado",
+    "basicProfile": "Perfil básico",
+    "height": "Altura",
+    "weight": "Peso",
+    "gender": "Género",
+    "dateOfBirth": "Fecha de nacimiento",
+    "healthGoals": "Objetivos de salud",
+    "currentGoal": "Objetivo actual",
+    "dailyActivity": "Actividad diaria",
+    "targetWeight": "Peso objetivo",
+    "saveProfile": "Guardar perfil",
+    "notMedicalAdvice": "Esta información personaliza tu experiencia. No es una evaluación médica ni constituye consejo médico.",
+    "genderOption": {
+      "MALE": "Hombre",
+      "FEMALE": "Mujer",
+      "OTHER": "Otro",
+      "UNSPECIFIED": "Sin especificar"
+    },
+    "goalOption": {
+      "WEIGHT_LOSS": "Perder peso",
+      "MAINTENANCE": "Mantener peso",
+      "WEIGHT_GAIN": "Ganar peso",
+      "FITNESS": "Mejorar forma física"
+    },
+    "activityOption": {
+      "SEDENTARY": "Sedentario",
+      "LIGHT": "Poco activo",
+      "MODERATE": "Moderadamente activo",
+      "ACTIVE": "Activo",
+      "VERY_ACTIVE": "Muy activo"
+    }
   },
   "profile": {
     "title": "Información personal",

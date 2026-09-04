@@ -178,7 +178,38 @@
     "managementSubtitle": "أنشئ ملفك · نظام غذائي وتدريب مخصص",
     "communitySubtitle": "شارك أسلوب حياتك الصحي",
     "rankingSubtitle": "سجّل حضورك واكسب الشارات",
-    "knowledgeSubtitle": "مقالات مختارة · أدلة مبنية على العلم"
+    "knowledgeSubtitle": "مقالات مختارة · أدلة مبنية على العلم",
+    "managementPageSubtitle": "أنشئ ملفك · خطة صحية مخصصة",
+    "basicProfile": "الملف الأساسي",
+    "height": "الطول",
+    "weight": "الوزن",
+    "gender": "الجنس",
+    "dateOfBirth": "تاريخ الميلاد",
+    "healthGoals": "الأهداف الصحية",
+    "currentGoal": "الهدف الحالي",
+    "dailyActivity": "النشاط اليومي",
+    "targetWeight": "الوزن المستهدف",
+    "saveProfile": "حفظ الملف",
+    "notMedicalAdvice": "تُستخدم هذه المعلومات لتخصيص تجربتك، وهي ليست تقييمًا طبيًا ولا تقدّم استشارة طبية.",
+    "genderOption": {
+      "MALE": "ذكر",
+      "FEMALE": "أنثى",
+      "OTHER": "آخر",
+      "UNSPECIFIED": "غير محدد"
+    },
+    "goalOption": {
+      "WEIGHT_LOSS": "إنقاص الوزن",
+      "MAINTENANCE": "الحفاظ على الوزن",
+      "WEIGHT_GAIN": "زيادة الوزن",
+      "FITNESS": "تحسين اللياقة"
+    },
+    "activityOption": {
+      "SEDENTARY": "قليل الحركة",
+      "LIGHT": "نشاط خفيف",
+      "MODERATE": "نشاط متوسط",
+      "ACTIVE": "نشِط",
+      "VERY_ACTIVE": "نشِط جدًا"
+    }
   },
   "profile": {
     "title": "المعلومات الشخصية",

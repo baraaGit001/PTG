@@ -5,7 +5,7 @@ import { CurrentUser, Public, RequirePermissions } from '../../common/decorators
 import type { RequestUser } from '../../common/types/request-user.js';
 import { PaginatedResult } from '../../common/dto/pagination.dto.js';
 import { CommunityService } from './community.service.js';
-import type {
+import {
   CreateCommentDto,
   CreatePostDto,
   FeedQueryDto,

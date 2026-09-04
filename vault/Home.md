@@ -23,6 +23,9 @@ happened session to session.
 
 ## Recent sessions
 
+- [[Sessions/2026-09-04-5]] — the Community 400 (ADR 0004's type-only
+  import trap, twice) and the Health tab that never reached the Health
+  screen; Health Management rebuilt to the app's layout
 - [[Sessions/2026-09-04-4]] — matching the real PTG Business app: Demo badge
   gone, ZAR everywhere, the OCUZ product loaded, and the My / Health /
   Investment screens rebuilt

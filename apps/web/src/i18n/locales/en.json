@@ -178,7 +178,38 @@
     "managementSubtitle": "Build your profile · Personalized diet & training",
     "communitySubtitle": "Share your healthy lifestyle",
     "rankingSubtitle": "Check in & earn badges",
-    "knowledgeSubtitle": "Curated articles · Science-backed guides"
+    "knowledgeSubtitle": "Curated articles · Science-backed guides",
+    "managementPageSubtitle": "Build your profile · Personalized health plan",
+    "basicProfile": "Basic Profile",
+    "height": "Height",
+    "weight": "Weight",
+    "gender": "Gender",
+    "dateOfBirth": "Date of Birth",
+    "healthGoals": "Health Goals",
+    "currentGoal": "Current Goal",
+    "dailyActivity": "Daily Activity",
+    "targetWeight": "Target Weight",
+    "saveProfile": "Save Profile",
+    "notMedicalAdvice": "This information personalises your experience. It is not a medical assessment and does not provide medical advice.",
+    "genderOption": {
+      "MALE": "Male",
+      "FEMALE": "Female",
+      "OTHER": "Other",
+      "UNSPECIFIED": "Not specified"
+    },
+    "goalOption": {
+      "WEIGHT_LOSS": "Lose Weight",
+      "MAINTENANCE": "Maintain Weight",
+      "WEIGHT_GAIN": "Gain Weight",
+      "FITNESS": "Get Fitter"
+    },
+    "activityOption": {
+      "SEDENTARY": "Sedentary",
+      "LIGHT": "Lightly Active",
+      "MODERATE": "Moderately Active",
+      "ACTIVE": "Active",
+      "VERY_ACTIVE": "Very Active"
+    }
   },
   "profile": {
     "title": "Personal Information",
