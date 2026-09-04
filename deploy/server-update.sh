@@ -146,6 +146,9 @@ podman ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 
 IP="$(curl -fsS --max-time 5 https://checkip.amazonaws.com 2>/dev/null | tr -d '[:space:]' || hostname -I | awk '{print $1}')"
 printf '\n\033[1;32mDeployed %s\033[0m\n' "$(git rev-parse --short HEAD)"
-echo "  web    http://${IP}/          (also http://${IP}:3000/)"
-echo "  admin  http://${IP}:4000/"
-echo "  api    http://${IP}/api/v1    docs at http://${IP}/docs"
+# :80 is bound but dropped by the OCI security list, so :3000 is the address
+# that actually works from outside. Admin shares it under /admin/ - :4000 is
+# AradoBot's.
+echo "  web    http://${IP}:3000/"
+echo "  admin  http://${IP}:3000/admin/"
+echo "  api    http://${IP}:3000/api/v1    docs at http://${IP}:3000/docs"

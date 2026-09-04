@@ -108,7 +108,7 @@ if errorlevel 1 goto :fail
 del /q "%KEY%" >nul 2>&1
 echo(
 echo ===========================================================
-echo  DONE - http://%SERVER%/  ^(admin: http://%SERVER%:4000/^)
+echo  DONE - http://%SERVER%:3000/  ^(admin: http://%SERVER%:3000/admin/^)
 echo ===========================================================
 echo(
 pause
